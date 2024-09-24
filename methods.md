@@ -122,11 +122,13 @@ min
 (
 100
 ,
+ 
 max
 ⁡
 (
 1
 ,
+ 
 (
 Raw Cumulative Score
 +
@@ -138,6 +140,7 @@ Raw Cumulative Score
 )
 Cumulative Score=min(100,max(1,(Raw Cumulative Score+2)×25))
 Explanation: The raw cumulative score, which ranges from -2 to 2 due to the scoring system, is shifted and scaled to fit within the desired range.
+
 5. Infrastructure Type Suggestion
 Based on the cumulative score, the tool suggests the most suitable type of infrastructure or strategy for each boundary feature:
 

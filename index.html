@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GIS Multi-Criteria Decision Analysis Tool</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/turf/turf.min.js"></script>
+  <!-- Include chroma.js for color interpolation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js"></script>
+  <style>
+      body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 0;
+          background-color: #f4f4f4;
+          color: #333;
+      }
+
+      header {
+          background-color: #007BFF;
+          color: white;
+          padding: 20px;
+          text-align: center;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      header h1 {
+          margin: 0;
+          font-size: 2em;
+      }
+
+      header p {
+          margin: 5px 0 0;
+          font-size: 1.1em;
+      }
+
+      #container {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: space-between;
+          padding: 20px;
+          background-color: #f9f9f9;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          margin: 20px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      #form-container, #map-container {
+          flex: 1;
+          min-width: 300px;
+          background-color: #ffffff;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          margin-right: 10px;
+      }
+
+      #map-container {
+          margin-right: 0;
+      }
+
+      #map {
+          height: 500px;
+          border-radius: 8px;
+          overflow: hidden;
+          margin-bottom: 20px;
+      }
+
+      form {
+          margin-bottom: 20px;
+      }
+
+      fieldset {
+          border: 1px solid #ddd;
+          padding: 15px;
+          margin-bottom: 20px;
+          border-radius: 8px;
+          background-color: #fdfdfd;
+      }
+
+      legend {
+          font-weight: bold;
+          padding: 0 10px;
+          color: #333;
+      }
+
+      input[type="submit"], button {
+          background-color: #28a745;
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          margin-top: 10px;
+          border-radius: 5px;
+          cursor: pointer;
+          transition: background-color 0.3s;
+      }
+
+      input[type="submit"]:hover, button:hover {
+          background-color: #218838;
+      }
+
+      input[type="submit"]:focus, button:focus {
+          outline: 2px solid #0056b3;
+      }
+
+      table {
+          width: 100%;
+          border-collapse: collapse;
+          background-color: white;
+          border-radius: 8px;
+          overflow: hidden;
+      }
+
+      th, td {
+          padding: 8px;
+          text-align: left;
+          border-bottom: 1px solid #ddd;
+      }
+
+      th {
+          background-color: #007BFF;
+          color: white;
+      }
+
+      .slider {
+          width: 100%;
+          margin-bottom: 10px;
+      }
+
+      .slider-value {
+          font-weight: bold;
+          margin-left: 10px;
+      }
+
+      @media (max-width: 768px) {
+          #container {
+              flex-direction: column;
+          }
+
+          #form-container, #map-container {
+              margin-right: 0;
+              margin-bottom: 20px;
+          }
+      }
+
+      /* Legend styles */
+      .info.legend {
+          background-color: white;
+          padding: 6px 8px;
+          font: 14px/16px Arial, Helvetica, sans-serif;
+          box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+          border-radius: 5px;
+      }
+
+      .info.legend i {
+          width: 18px;
+          height: 18px;
+          float: left;
+          margin-right: 8px;
+          opacity: 0.7;
+      }
+
+      /* Tooltip styles */
+      .tooltip {
+          position: relative;
+          display: inline-block;
+      }
+
+      .tooltip .tooltiptext {
+          visibility: hidden;
+          width: 200px;
+          background-color: #555;
+          color: #fff;
+          text-align: center;
+          border-radius: 6px;
+          padding: 5px;
+          position: absolute;
+          z-index: 1;
+          bottom: 125%; /* Position above */
+          left: 50%;
+          margin-left: -100px;
+          opacity: 0;
+          transition: opacity 0.3s;
+      }
+
+      .tooltip .tooltiptext::after {
+          content: "";
+          position: absolute;
+          top: 100%; /* At the bottom of the tooltip */
+          left: 50%;
+          margin-left: -5px;
+          border-width: 5px;
+          border-style: solid;
+          border-color: #555 transparent transparent transparent;
+      }
+
+      .tooltip:hover .tooltiptext {
+          visibility: visible;
+          opacity: 1;
+      }
+
+      /* Instruction styles */
+      .instruction {
+          background-color: #e9ecef;
+          padding: 10px;
+          border-radius: 5px;
+          margin-bottom: 20px;
+      }
+  </style>
+</head>
+<body>
+    <header>
+        <h1>GIS Multi-Criteria Decision Analysis Tool</h1>
+        <p>Analyze and visualize spatial data based on multiple criteria.</p>
+        <a href="https://mckeont.github.io/Data_Repo_Template/">Access Public Water Data Here</a>
+    </header>
+
+    <div id="container">
+        <div id="form-container">
+            <!-- Description Section -->
+            <section>
+                <h2>Welcome to the GIS-MCDA Tool</h2>
+                <p>This tool allows you to perform a multi-criteria decision analysis on spatial data. You can select and upload various datasets, set their importance through weighting, and visualize the results on an interactive map.</p>
+            </section>
+
+            <!-- Dataset Selection Form -->
+            <form id="dataset-selection-form">
+                <h3>1. Select Datasets to Include</h3>
+                <p>Select the datasets you want to include in your analysis. You can select as many as you like.</p>
+                <!-- Datasets will be dynamically added here -->
+                <div id="dataset-selection-container"></div>
+                <input type="submit" value="Proceed to Upload">
+            </form>
+
+            <!-- Data Upload Form (initially hidden) -->
+            <form id="data-upload-form" style="display:none;">
+                <h3>2. Upload Selected Data Layers</h3>
+                <p>Upload your data files for the selected datasets. After uploading, select the field to summarize and set the weight for each dataset.</p>
+                <div id="selected-datasets-container">
+                    <!-- Selected datasets upload fields will appear here -->
+                </div>
+                <input type="submit" value="Upload Data Layers">
+            </form>
+
+            <!-- Boundary Upload Form -->
+            <form id="boundary-upload-form" style="margin-top: 20px;">
+                <h3>3. Upload Boundary File (e.g., Watersheds)</h3>
+                <p>Upload a GeoJSON file representing the boundaries within which the analysis will be performed.</p>
+                <input type="file" id="boundary-file-input" name="boundary-file" accept=".geojson">
+                <input type="submit" value="Upload Boundary File">
+            </form>
+
+            <!-- Boundary Name Field Selector -->
+            <div id="boundary-name-field-selector" style="display:none; margin-top: 10px;"></div>
+
+            <!-- Analyze Button -->
+            <div id="action-buttons" style="text-align: center; margin-top: 20px; display:none;">
+                <button id="analyze-button">Analyze Data</button>
+            </div>
+        </div>
+
+        <div id="map-container">
+            <div id="map"></div>
+            <table id="file-info">
+                <thead>
+                    <tr>
+                        <th>Boundary Name</th>
+                        <th>Score</th>
+                        <th>Suggested Strategy</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- JavaScript code -->
+    <script>
+        var map = L.map('map').setView([39.95265, -75.16525], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 16
+        }).addTo(map);
+
+        // Datasets grouped by category
+        var allDatasets = {
+            'Site Conditions': {
+                'land-slope': 'Land Slope',
+                'available-green-space': 'Available Green Space',
+                'building-density': 'Building Density',
+                'vacancy-percentage': 'Vacancy Percentage',
+                'environmental-contamination': 'Environmental Contamination',
+                'groundwater': 'Groundwater',
+                'bedrock': 'Bedrock',
+                'soil-permeability': 'Soil Permeability',
+                'utility-density': 'Utility Density/Complexity',
+            },
+            'Water Quality and Quantity': {
+                'sso': 'SSO (Sanitary Sewer Overflow)',
+                'cso': 'CSO (Combined Sewer Overflow)',
+                'ms4': 'MS4 (Municipal Separate Storm Sewer System)',
+                'improvements-beyond-requirements': 'Improvements Beyond Requirements',
+                'stormwater-flooding': 'Stormwater Flooding',
+                'basement-backups': 'Basement Backups',
+                'riverine-flooding': 'Riverine Flooding',
+                'coastal-flooding': 'Coastal/Tidal Flooding',
+                'water-scarcity': 'Water Scarcity/Supply',
+            },
+            'Enviro-Social': {
+                'climate-change-impacts': 'Climate-Change Impacts',
+                'aging-infrastructure': 'Aging Infrastructure',
+                'development-change': 'Change in Development/Population',
+                'vulnerability': 'Vulnerability',
+                'finance': 'Finance',
+                'land-grant-areas': 'Land Grant Areas',
+            }
+        };
+
+        var selectedDatasets = {};
+        var geoJsonData = {};
+        var boundaryData = null;
+        var dataLayers = [];
+        var boundaryLayer = null;
+        var analysisLayers = L.layerGroup().addTo(map);
+        var cumulativeScores = {};
+        var boundaryNameField = '';
+
+        // Build the dataset selection form
+        document.addEventListener('DOMContentLoaded', function() {
+            buildDatasetSelectionForm();
+        });
+
+        function buildDatasetSelectionForm() {
+            var container = document.getElementById('dataset-selection-container');
+            container.innerHTML = '';
+
+            for (var category in allDatasets) {
+                var fieldset = document.createElement('fieldset');
+                var legend = document.createElement('legend');
+                legend.textContent = category;
+                fieldset.appendChild(legend);
+
+                for (var key in allDatasets[category]) {
+                    var div = document.createElement('div');
+                    div.innerHTML = `
+                        <label><input type="checkbox" name="datasets" value="${key}"> ${allDatasets[category][key]}</label><br>
+                    `;
+                    fieldset.appendChild(div);
+                }
+
+                container.appendChild(fieldset);
+            }
+        }
+
+        // Dataset Selection Form Submission
+        document.getElementById('dataset-selection-form').onsubmit = function(event) {
+            event.preventDefault();
+
+            // Get selected datasets
+            var formData = new FormData(event.target);
+            var datasets = formData.getAll('datasets');
+            if (datasets.length === 0) {
+                alert('Please select at least one dataset.');
+                return;
+            }
+
+            // Initialize selected datasets
+            selectedDatasets = {};
+            for (var category in allDatasets) {
+                for (var key in allDatasets[category]) {
+                    if (datasets.includes(key)) {
+                        if (!selectedDatasets[category]) {
+                            selectedDatasets[category] = {};
+                        }
+                        selectedDatasets[category][key] = allDatasets[category][key];
+                        geoJsonData[key] = [];
+                    }
+                }
+            }
+
+            // Hide dataset selection form
+            document.getElementById('dataset-selection-form').style.display = 'none';
+
+            // Build the upload form for selected datasets
+            buildUploadForm(selectedDatasets);
+        };
+
+        function buildUploadForm(datasets) {
+            var uploadForm = document.getElementById('data-upload-form');
+            var container = document.getElementById('selected-datasets-container');
+            container.innerHTML = '';
+
+            for (var category in datasets) {
+                var fieldset = document.createElement('fieldset');
+                var legend = document.createElement('legend');
+                legend.textContent = category;
+                fieldset.appendChild(legend);
+
+                for (var key in datasets[category]) {
+                    var div = document.createElement('div');
+                    div.innerHTML = `
+                        <label for="${key}">${datasets[category][key]}:</label>
+                        <input type="file" id="${key}" name="${key}" accept=".geojson"><br>
+                        <div id="${key}-files"></div>
+                        <label>Select Field to Summarize:</label>
+                        <select name="field-selector-${key}" data-dataset="${key}"></select><br>
+                        <label>Weight: <input type="range" min="0" max="100" value="50" class="slider" name="weight-${key}" data-dataset="${key}"></label>
+                        <span class="slider-value">50</span>
+                        <hr>
+                    `;
+                    fieldset.appendChild(div);
+
+                    // Add event listeners for file input and weight slider
+                    (function(datasetKey) {
+                        var fileInput = div.querySelector(`#${datasetKey}`);
+                        fileInput.addEventListener('change', function(event) {
+                            handleFileSelect(event, datasetKey);
+                        });
+
+                        var slider = div.querySelector(`input[name="weight-${datasetKey}"]`);
+                        var sliderValue = div.querySelector('.slider-value');
+                        slider.addEventListener('input', function() {
+                            sliderValue.textContent = this.value;
+                        });
+                    })(key);
+                }
+
+                container.appendChild(fieldset);
+            }
+
+            uploadForm.style.display = 'block';
+        }
+
+        function handleFileSelect(event, datasetKey) {
+            var files = event.target.files;
+            if (files.length === 0) {
+                return;
+            }
+
+            geoJsonData[datasetKey] = []; // Reset data for this dataset
+
+            var filePromises = [];
+            for (var i = 0; i < files.length; i++) {
+                var file = files[i];
+                filePromises.push(
+                    readFileAsText(file).then(function(result) {
+                        var data = JSON.parse(result);
+                        geoJsonData[datasetKey].push(data);
+                        var layer = L.geoJSON(data, {
+                            style: {
+                                color: '#1E90FF',
+                                fillColor: '#1E90FF',
+                                fillOpacity: 0.3,
+                                weight: 1
+                            }
+                        }).addTo(map);
+                        dataLayers.push(layer);
+                        map.fitBounds(layer.getBounds());
+                    }).catch(function(error) {
+                        console.error(`Error reading GeoJSON file for ${datasetKey}:`, error);
+                    })
+                );
+            }
+
+            Promise.all(filePromises).then(() => {
+                // Populate field selector for this dataset
+                var allFieldNames = new Set();
+                geoJsonData[datasetKey].forEach(data => {
+                    var fieldNames = getFieldNames(data);
+                    fieldNames.forEach(name => allFieldNames.add(name));
+                });
+
+                var fieldSelector = document.querySelector(`select[name="field-selector-${datasetKey}"]`);
+                fieldSelector.innerHTML = `${Array.from(allFieldNames).map(field => `<option value="${field}">${field}</option>`).join('')}`;
+            });
+        }
+
+        document.getElementById('data-upload-form').onsubmit = function(event) {
+            event.preventDefault();
+
+            // Ensure that data has been uploaded
+            var anyDataUploaded = false;
+            for (let key in geoJsonData) {
+                if (geoJsonData[key].length > 0) {
+                    anyDataUploaded = true;
+                    break;
+                }
+            }
+
+            if (!anyDataUploaded) {
+                alert('Please upload at least one data layer.');
+                return;
+            }
+
+            // Show the analyze button
+            document.getElementById('action-buttons').style.display = 'block';
+        };
+
+        document.getElementById('boundary-upload-form').onsubmit = function(event) {
+            event.preventDefault();
+
+            // Clear previous boundary data and layer
+            boundaryData = null;
+            if (boundaryLayer) {
+                map.removeLayer(boundaryLayer);
+            }
+            cumulativeScores = {};
+            analysisLayers.clearLayers();
+            document.getElementById('file-info').querySelector('tbody').innerHTML = '';
+            document.getElementById('boundary-name-field-selector').innerHTML = '';
+            document.getElementById('boundary-name-field-selector').style.display = 'none';
+
+            var file = document.getElementById('boundary-file-input').files[0];
+            if (file) {
+                readFileAsText(file).then(function(result) {
+                    boundaryData = JSON.parse(result);
+
+                    // Extract field names from boundaryData
+                    var boundaryFieldNames = getFieldNames(boundaryData);
+
+                    // Build the boundary name field selector
+                    buildBoundaryNameFieldSelector(boundaryFieldNames);
+
+                    // Set default boundaryNameField
+                    boundaryNameField = boundaryFieldNames[0];
+
+                    // Show the boundary name field selector
+                    document.getElementById('boundary-name-field-selector').style.display = 'block';
+
+                    // Add boundaryLayer to map
+                    boundaryLayer = L.geoJSON(boundaryData, {
+                        style: {
+                            color: '#FF0000',
+                            fillColor: '#FFAAAA',
+                            fillOpacity: 0.3,
+                            weight: 2
+                        },
+                        onEachFeature: function(feature, layer) {
+                            var boundaryName = feature.properties[boundaryNameField] || `Boundary_${layer._leaflet_id}`;
+                            var cumulativeScore = feature.properties.cumulativeScore || 0;
+                            layer.bindPopup(`<b>${boundaryName}</b><br>Cumulative Score: ${cumulativeScore.toFixed(2)}`);
+                        }
+                    }).addTo(map);
+                    map.fitBounds(boundaryLayer.getBounds());
+
+                }).catch(function(error) {
+                    console.error('Error reading Boundary GeoJSON file:', error);
+                });
+            }
+        };
+
+        function buildBoundaryNameFieldSelector(fieldNames) {
+            var container = document.getElementById('boundary-name-field-selector');
+            container.innerHTML = '';
+
+            var div = document.createElement('div');
+            div.innerHTML = `
+                <label>Select Boundary Name Field:</label>
+                <select id="boundary-name-field-select">
+                    ${fieldNames.map(field => `<option value="${field}">${field}</option>`).join('')}
+                </select>
+            `;
+            container.appendChild(div);
+
+            // Set default boundaryNameField to first field
+            boundaryNameField = fieldNames[0];
+
+            // Add event listener to update boundaryNameField when user selects a different field
+            document.getElementById('boundary-name-field-select').addEventListener('change', function(event) {
+                boundaryNameField = event.target.value;
+
+                // Update the popups in the boundaryLayer
+                boundaryLayer.eachLayer(function(layer) {
+                    var feature = layer.feature;
+                    var boundaryName = feature.properties[boundaryNameField] || `Boundary_${layer._leaflet_id}`;
+                    var cumulativeScore = feature.properties.cumulativeScore || 0;
+                    layer.bindPopup(`<b>${boundaryName}</b><br>Cumulative Score: ${cumulativeScore.toFixed(2)}`);
+                });
+
+                // If analysis has been performed, update the analysisLayers as well
+                analysisLayers.eachLayer(function(layer) {
+                    var feature = layer.feature;
+                    var boundaryName = feature.properties[boundaryNameField] || `Boundary_${layer._leaflet_id}`;
+                    var cumulativeScore = feature.properties.cumulativeScore || 0;
+                    layer.bindPopup(`<b>${boundaryName}</b><br>Cumulative Score: ${cumulativeScore.toFixed(2)}`);
+                });
+
+                // Update the results table
+                if (Object.keys(cumulativeScores).length > 0) {
+                    displayResults(cumulativeScores);
+                }
+            });
+        }
+
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                if (file.size === 0) {
+                    reject(new Error(`The file ${file.name} is empty.`));
+                    return;
+                }
+
+                var reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        const result = event.target.result;
+                        if (!result) {
+                            throw new Error(`File ${file.name} is empty or invalid.`);
+                        }
+                        JSON.parse(result);
+                        resolve(result);
+                    } catch (error) {
+                        reject(new Error(`Invalid GeoJSON file: ${file.name}. Error: ${error.message}`));
+                    }
+                };
+                reader.onerror = function(event) {
+                    reject(new Error(`FileReader error: ${event.target.error.code}`));
+                };
+                reader.readAsText(file);
+            });
+        }
+
+        function getFieldNames(data) {
+            var fieldNames = new Set();
+            data.features.forEach(feature => {
+                Object.keys(feature.properties).forEach(field => {
+                    fieldNames.add(field);
+                });
+            });
+            return Array.from(fieldNames);
+        }
+
+        document.getElementById('analyze-button').onclick = function() {
+            performAnalysis();
+        };
+
+        function calculateThresholds(data, selectedField) {
+            let min = Infinity, max = -Infinity;
+
+            data.features.forEach(feature => {
+                let value = feature.properties[selectedField];
+                if (value < min) min = value;
+                if (value > max) max = value;
+            });
+
+            let range = max - min;
+            let upperThreshold = min + 0.75 * range;
+            let middleThreshold = min + 0.5 * range;
+            let lowerThreshold = min + 0.25 * range;
+
+            return { upperThreshold, middleThreshold, lowerThreshold };
+        }
+
+        function performAnalysis() {
+            analysisLayers.clearLayers();
+
+            if (!boundaryData) {
+                alert('Please upload the boundary file first.');
+                return;
+            }
+
+            cumulativeScores = {};
+
+            boundaryData.features.forEach((boundaryFeature, boundaryIndex) => {
+                var boundaryId = boundaryFeature.properties[boundaryNameField] || `Boundary_${boundaryIndex + 1}`;
+                var totalWeight = 0;
+                var totalScore = 0;
+
+                for (var datasetKey in geoJsonData) {
+                    var datasetDataArray = geoJsonData[datasetKey];
+                    if (!datasetDataArray || datasetDataArray.length === 0) {
+                        continue; // Skip if no data uploaded for this dataset
+                    }
+
+                    var datasetScoreSum = 0;
+                    var datasetTotalWeight = 0;
+
+                    datasetDataArray.forEach((data, index) => {
+                        var selectedField = document.querySelector(`select[name="field-selector-${datasetKey}"]`).value;
+                        let thresholds = calculateThresholds(data, selectedField);
+                        let { upperThreshold, middleThreshold, lowerThreshold } = thresholds;
+
+                        data.features.forEach(feature => {
+                            var intersection = turf.intersect(boundaryFeature, feature);
+                            if (intersection) {
+                                var intersectionArea = turf.area(intersection);
+                                var featureArea = turf.area(feature);
+                                var proportion = intersectionArea / featureArea;
+
+                                var weight = Number(document.querySelector(`input[name="weight-${datasetKey}"]`).value);
+
+                                if (selectedField && !isNaN(feature.properties[selectedField])) {
+                                    var rawScore = Number(feature.properties[selectedField]);
+
+                                    // Apply dynamic threshold-based scoring
+                                    let score = 0;
+                                    if (rawScore >= upperThreshold) {
+                                        score = 2; // ++
+                                    } else if (rawScore >= middleThreshold) {
+                                        score = 1; // +
+                                    } else if (rawScore >= lowerThreshold) {
+                                        score = -1; // -
+                                    } else {
+                                        score = -2; // --
+                                    }
+
+                                    // Apply weight and proportion
+                                    var weightedScore = score * weight * proportion;
+                                    datasetScoreSum += weightedScore;
+                                    datasetTotalWeight += weight;
+                                }
+                            }
+                        });
+                    });
+
+                    if (datasetTotalWeight > 0) {
+                        var normalizedDatasetScore = datasetScoreSum / datasetTotalWeight;
+                        totalScore += normalizedDatasetScore;
+                        totalWeight += 1;
+                    }
+                }
+
+                if (totalWeight > 0) {
+                    let rawCumulativeScore = (totalScore / totalWeight);
+
+                    // Normalize to 1-100 scale
+                    cumulativeScores[boundaryId] = Math.min(100, Math.max(1, (rawCumulativeScore + 2) * 25));
+                } else {
+                    cumulativeScores[boundaryId] = 0;
+                }
+
+                boundaryFeature.properties.cumulativeScore = cumulativeScores[boundaryId];
+            });
+
+            displayResults(cumulativeScores);
+            updateMapWithScores(boundaryData, cumulativeScores);
+        }
+
+        function displayResults(cumulativeScores) {
+            var fileInfo = document.getElementById('file-info').querySelector('tbody');
+            fileInfo.innerHTML = '';
+
+            boundaryData.features.forEach((boundaryFeature, boundaryIndex) => {
+                var boundaryName = boundaryFeature.properties[boundaryNameField] || `Boundary_${boundaryIndex + 1}`;
+                var score = boundaryFeature.properties.cumulativeScore || 0;
+
+                var row = fileInfo.insertRow();
+                var cell1 = row.insertCell(0);
+                var cell2 = row.insertCell(1);
+                var cell3 = row.insertCell(2);
+                var cell4 = row.insertCell(3);
+                cell1.textContent = boundaryName;
+                cell2.textContent = score.toFixed(2);
+                cell3.textContent = getInfrastructureType(score);
+                cell4.textContent = 'Details';
+            });
+        }
+
+        // Define the color scale using chroma.js
+        var colorScale = chroma.scale(['#1a9641', '#ffffbf', '#d7191c']).domain([1, 100]);
+
+        function getColor(score) {
+            return colorScale(score).hex();
+        }
+
+        function updateMapWithScores(boundaryData, cumulativeScores) {
+            analysisLayers.clearLayers();
+            L.geoJSON(boundaryData, {
+                style: function(feature) {
+                    return {
+                        color: getColor(feature.properties.cumulativeScore),
+                        fillColor: getColor(feature.properties.cumulativeScore),
+                        fillOpacity: 0.7,
+                        weight: 2
+                    };
+                },
+                onEachFeature: function(feature, layer) {
+                    var boundaryName = feature.properties[boundaryNameField] || `Boundary_${layer._leaflet_id}`;
+                    var cumulativeScore = feature.properties.cumulativeScore || 0;
+                    layer.bindPopup(`<b>${boundaryName}</b><br>Cumulative Score: ${cumulativeScore.toFixed(2)}`);
+                }
+            }).addTo(analysisLayers);
+        }
+
+        function getInfrastructureType(value) {
+            if (value <= 15) {
+                return 'Decentralized Surface Green';
+            } else if (value <= 30) {
+                return 'Decentralized Roof Top Green';
+            } else if (value <= 45) {
+                return 'Decentrlized Surface Gray ';
+            } else if (value <= 60) {
+                return 'Dencentralized Subsurface Gray';
+            } else if (value <= 75) {
+                return 'Centralized Surface Green';
+            } else {
+                return 'Centralized Subsuface Gray';
+            }
+        }
+
+        // Add the legend to the map
+        var legend = L.control({ position: 'bottomright' });
+
+        legend.onAdd = function(map) {
+            var div = L.DomUtil.create('div', 'info legend');
+            var grades = [1, 20, 40, 60, 80, 100];
+            var labels = [];
+
+            for (var i = 0; i < grades.length - 1; i++) {
+                var from = grades[i];
+                var to = grades[i + 1];
+                labels.push(
+                    '<i style="background:' + getColor((from + to) / 2) + '"></i> ' +
+                    from + (to ? '&ndash;' + to : '+')
+                );
+            }
+
+            div.innerHTML = labels.join('<br>');
+            return div;
+        };
+
+        legend.addTo(map);
+    </script>
+</body>
+</html>

@@ -133,32 +133,14 @@ Based on the cumulative score, the tool suggests the most suitable type of infra
 - **Adaptability:** The threshold-based scoring system adapts to different data ranges and distributions, maintaining relevance across various scenarios.
 - **Real-Time Feedback:** Immediate visual and numerical feedback allows users to iteratively refine their analysis parameters for optimal results.
 
-## 8. Considerations and Recommendations
-
-### Threshold Calculation Approach:
-
 - **Range-Based vs. Percentile-Based Thresholds:**
   - The current method uses range-based thresholds, dividing the data range into quartiles without accounting for the actual data distribution.
   - This approach assumes a uniform distribution of data values, which may not hold true for skewed datasets or those with outliers.
 
-- **Implications:**
-  - **Uniform Distribution:** If the data is uniformly distributed, range-based thresholds approximate the true quartiles reasonably well.
-  - **Skewed Distribution:** For datasets with skewed distributions, the calculated thresholds may not correspond to the actual 25th, 50th, and 75th percentiles, potentially impacting the scoring accuracy.
 
-### Recommendation for Enhanced Accuracy:
-
-- **Percentile-Based Thresholds:**
-  - To achieve a more accurate reflection of the data distribution, consider calculating thresholds based on actual percentiles.
-  - This can be implemented by extracting all values of the selected field, sorting them, and determining the values at the 25th, 50th (median), and 75th percentiles.
-
-- **Benefits:**
-  - **Data Representation:** Percentile-based thresholds account for the actual distribution of data, providing a more representative scoring mechanism.
-  - **Improved Decision-Making:** Accurate thresholds enhance the reliability of the analysis outcomes, supporting better-informed decisions.
 
 ## Conclusion
 
 The GIS MCDA tool's methodology integrates multiple spatial datasets to evaluate and rank boundary features based on user-defined criteria and weights. By employing a weighted, threshold-based scoring system, the tool provides a comprehensive analysis that is both structured and adaptable to various scenarios. The methodology emphasizes user control and customization, allowing for tailored analyses that meet specific needs.
-
-The consideration of threshold calculation methods highlights the importance of aligning the analytical approach with the nature of the data. Adjusting the methodology to incorporate percentile-based thresholds could enhance the accuracy and reliability of the analysis, especially for datasets with non-uniform distributions.
 
 This methodology facilitates informed decision-making in spatial planning, infrastructure development, and environmental management by providing clear, quantifiable insights into the suitability of different areas based on multiple criteria.

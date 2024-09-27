@@ -230,7 +230,7 @@
                 <h3>1. Select Datasets to Include</h3>
                 <p>Select the datasets (geojson format) you want to include in your analysis.
                    You can select as many as you like. After selecting your layers, click on "Proceed to Upload".
-                  Next choose the field to summarize and weigh each layers. Next click "Upload Data Layers". 
+                  Next choose the field to summarize and weigh each layers. Next click "Upload Data Layers".
                   Next upload your zone boundary. Choose name field, then click "Analyze" to view results..</p>
                 <!-- Datasets will be dynamically added here -->
                 <div id="dataset-selection-container"></div>
@@ -290,35 +290,15 @@
 
         // Datasets grouped by category
         var allDatasets = {
-            'Site Conditions': {
+            'Terrain': {
                 'land-slope': 'Land Slope',
-                'available-green-space': 'Available Green Space',
-                'building-density': 'Building Density',
-                'vacancy-percentage': 'Vacancy Percentage',
-                'environmental-contamination': 'Environmental Contamination',
-                'groundwater': 'Groundwater',
-                'bedrock': 'Bedrock',
-                'soil-permeability': 'Soil Permeability',
-                'utility-density': 'Utility Density/Complexity',
             },
-            'Water Quality and Quantity': {
-                'sso': 'SSO (Sanitary Sewer Overflow)',
-                'cso': 'CSO (Combined Sewer Overflow)',
-                'ms4': 'MS4 (Municipal Separate Storm Sewer System)',
-                'improvements-beyond-requirements': 'Improvements Beyond Requirements',
-                'stormwater-flooding': 'Stormwater Flooding',
-                'basement-backups': 'Basement Backups',
-                'riverine-flooding': 'Riverine Flooding',
-                'coastal-flooding': 'Coastal/Tidal Flooding',
-                'water-scarcity': 'Water Scarcity/Supply',
+            'Built Environment Density': {
+                'population-density': 'Population Density',
             },
-            'Enviro-Social': {
-                'climate-change-impacts': 'Climate-Change Impacts',
-                'aging-infrastructure': 'Aging Infrastructure',
-                'development-change': 'Change in Development/Population',
-                'vulnerability': 'Vulnerability',
-                'finance': 'Finance',
-                'land-grant-areas': 'Land Grant Areas',
+            'Subsurface Boundaries': {
+                'bedrock': 'Bedrock Depth',
+                'groundwater': 'Groundwater Depth',
             }
         };
 

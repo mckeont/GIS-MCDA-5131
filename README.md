@@ -1,6 +1,8 @@
 # GIS-MCDA-5131
 MCDA tool for wet weather management
-https://mckeont.github.io/GIS-MCDA-5131/ 
+https://mckeont.github.io/GIS-MCDA-5131/  <- Simple Version
+
+https://mckeont.github.io/mcda_v1/ <- original Version
 
 
 

@@ -228,7 +228,10 @@
             <!-- Dataset Selection Form -->
             <form id="dataset-selection-form">
                 <h3>1. Select Datasets to Include</h3>
-                <p>Select the datasets you want to include in your analysis. You can select as many as you like.</p>
+                <p>Select the datasets (geojson format) you want to include in your analysis.
+                   You can select as many as you like. After selecting your layers, click on "Proceed to Upload".
+                  Next choose the field to summarize and weigh each layers. Next click "Upload Data Layers". 
+                  Next upload your zone boundary. Choose name field, then click "Analyze" to view results..</p>
                 <!-- Datasets will be dynamically added here -->
                 <div id="dataset-selection-container"></div>
                 <input type="submit" value="Proceed to Upload">
@@ -541,7 +544,12 @@
                         onEachFeature: function(feature, layer) {
                             var boundaryName = feature.properties[boundaryNameField] || `Boundary_${layer._leaflet_id}`;
                             var cumulativeScore = feature.properties.cumulativeScore || 0;
-                            layer.bindPopup(`<b>${boundaryName}</b><br>Cumulative Score: ${cumulativeScore.toFixed(2)}`);
+                            var suggestedStrategy = getInfrastructureType(cumulativeScore);
+                            layer.bindPopup(`
+                                <b>${boundaryName}</b><br>
+                                Cumulative Score: ${cumulativeScore.toFixed(2)}<br>
+                                Suggested Strategy: ${suggestedStrategy}
+                            `);
                         }
                     }).addTo(map);
                     map.fitBounds(boundaryLayer.getBounds());
@@ -577,7 +585,12 @@
                     var feature = layer.feature;
                     var boundaryName = feature.properties[boundaryNameField] || `Boundary_${layer._leaflet_id}`;
                     var cumulativeScore = feature.properties.cumulativeScore || 0;
-                    layer.bindPopup(`<b>${boundaryName}</b><br>Cumulative Score: ${cumulativeScore.toFixed(2)}`);
+                    var suggestedStrategy = getInfrastructureType(cumulativeScore);
+                    layer.bindPopup(`
+                        <b>${boundaryName}</b><br>
+                        Cumulative Score: ${cumulativeScore.toFixed(2)}<br>
+                        Suggested Strategy: ${suggestedStrategy}
+                    `);
                 });
 
                 // If analysis has been performed, update the analysisLayers as well
@@ -585,7 +598,12 @@
                     var feature = layer.feature;
                     var boundaryName = feature.properties[boundaryNameField] || `Boundary_${layer._leaflet_id}`;
                     var cumulativeScore = feature.properties.cumulativeScore || 0;
-                    layer.bindPopup(`<b>${boundaryName}</b><br>Cumulative Score: ${cumulativeScore.toFixed(2)}`);
+                    var suggestedStrategy = getInfrastructureType(cumulativeScore);
+                    layer.bindPopup(`
+                        <b>${boundaryName}</b><br>
+                        Cumulative Score: ${cumulativeScore.toFixed(2)}<br>
+                        Suggested Strategy: ${suggestedStrategy}
+                    `);
                 });
 
                 // Update the results table
@@ -779,7 +797,12 @@
                 onEachFeature: function(feature, layer) {
                     var boundaryName = feature.properties[boundaryNameField] || `Boundary_${layer._leaflet_id}`;
                     var cumulativeScore = feature.properties.cumulativeScore || 0;
-                    layer.bindPopup(`<b>${boundaryName}</b><br>Cumulative Score: ${cumulativeScore.toFixed(2)}`);
+                    var suggestedStrategy = getInfrastructureType(cumulativeScore);
+                    layer.bindPopup(`
+                        <b>${boundaryName}</b><br>
+                        Cumulative Score: ${cumulativeScore.toFixed(2)}<br>
+                        Suggested Strategy: ${suggestedStrategy}
+                    `);
                 }
             }).addTo(analysisLayers);
         }
@@ -790,13 +813,13 @@
             } else if (value <= 30) {
                 return 'Decentralized Roof Top Green';
             } else if (value <= 45) {
-                return 'Decentrlized Surface Gray ';
+                return 'Decentralized Surface Gray';
             } else if (value <= 60) {
-                return 'Dencentralized Subsurface Gray';
+                return 'Decentralized Subsurface Gray';
             } else if (value <= 75) {
                 return 'Centralized Surface Green';
             } else {
-                return 'Centralized Subsuface Gray';
+                return 'Centralized Subsurface Gray';
             }
         }
 

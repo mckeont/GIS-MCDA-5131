@@ -1,0 +1,181 @@
+Category,Subcategory,Threshold,Strategy,Score,Type,Driver
+Terrain,Slope,>=15,Decentralized Surface Green,-,Condition,
+Terrain,Slope,>=15,Decentralized Roof Top Green,=,Condition,
+Terrain,Slope,>=15,Decentralized Surface Gray,--,Condition,
+Terrain,Slope,>=15,Decentralized Subsurface Gray,-,Condition,
+Terrain,Slope,>=15,Centralized Surface Green,--,Condition,
+Terrain,Slope,>=15,Centralized Subsurface Gray,=,Condition,
+Terrain,Slope,>=5 and <15,Decentralized Surface Green,-,Condition,
+Terrain,Slope,>=5 and <15,Decentralized Roof Top Green,=,Condition,
+Terrain,Slope,>=5 and <15,Decentralized Surface Gray,-,Condition,
+Terrain,Slope,>=5 and <15,Decentralized Subsurface Gray,=,Condition,
+Terrain,Slope,>=5 and <15,Centralized Surface Green,+,Condition,
+Terrain,Slope,>=5 and <15,Centralized Subsurface Gray,=,Condition,
+Terrain,Slope,<5,Decentralized Surface Green,+,Condition,
+Terrain,Slope,<5,Decentralized Roof Top Green,+,Condition,
+Terrain,Slope,<5,Decentralized Surface Gray,+,Condition,
+Terrain,Slope,<5,Decentralized Subsurface Gray,+,Condition,
+Terrain,Slope,<5,Centralized Surface Green,+,Condition,
+Terrain,Slope,<5,Centralized Subsurface Gray,=,Condition,
+Built Environment Density,Population Density,>=50000,Decentralized Surface Green,--,Condition,
+Built Environment Density,Population Density,>=50000,Decentralized Roof Top Green,+,Condition,
+Built Environment Density,Population Density,>=50000,Decentralized Surface Gray,-,Condition,
+Built Environment Density,Population Density,>=50000,Decentralized Subsurface Gray,-,Condition,
+Built Environment Density,Population Density,>=50000,Centralized Surface Green,--,Condition,
+Built Environment Density,Population Density,>=50000,Centralized Subsurface Gray,+,Condition,
+Built Environment Density,Population Density,>=20000 and <50000,Decentralized Surface Green,+,Condition,
+Built Environment Density,Population Density,>=20000 and <50000,Decentralized Roof Top Green,+,Condition,
+Built Environment Density,Population Density,>=20000 and <50000,Decentralized Surface Gray,-,Condition,
+Built Environment Density,Population Density,>=20000 and <50000,Decentralized Subsurface Gray,+,Condition,
+Built Environment Density,Population Density,>=20000 and <50000,Centralized Surface Green,--,Condition,
+Built Environment Density,Population Density,>=20000 and <50000,Centralized Subsurface Gray,+,Condition,
+Built Environment Density,Population Density,>=10000 and <20000,Decentralized Surface Green,+,Condition,
+Built Environment Density,Population Density,>=10000 and <20000,Decentralized Roof Top Green,+,Condition,
+Built Environment Density,Population Density,>=10000 and <20000,Decentralized Surface Gray,+,Condition,
+Built Environment Density,Population Density,>=10000 and <20000,Decentralized Subsurface Gray,+,Condition,
+Built Environment Density,Population Density,>=10000 and <20000,Centralized Surface Green,-,Condition,
+Built Environment Density,Population Density,>=10000 and <20000,Centralized Subsurface Gray,-,Condition,
+Built Environment Density,Population Density,>=2000 and <10000,Decentralized Surface Green,+,Condition,
+Built Environment Density,Population Density,>=2000 and <10000,Decentralized Roof Top Green,-,Condition,
+Built Environment Density,Population Density,>=2000 and <10000,Decentralized Surface Gray,+,Condition,
+Built Environment Density,Population Density,>=2000 and <10000,Decentralized Subsurface Gray,-,Condition,
+Built Environment Density,Population Density,>=2000 and <10000,Centralized Surface Green,+,Condition,
+Built Environment Density,Population Density,>=2000 and <10000,Centralized Subsurface Gray,--,Condition,
+Built Environment Density,Population Density,<2000,Decentralized Surface Green,+,Condition,
+Built Environment Density,Population Density,<2000,Decentralized Roof Top Green,-,Condition,
+Built Environment Density,Population Density,<2000,Decentralized Surface Gray,+,Condition,
+Built Environment Density,Population Density,<2000,Decentralized Subsurface Gray,-,Condition,
+Built Environment Density,Population Density,<2000,Centralized Surface Green,++,Condition,
+Built Environment Density,Population Density,<2000,Centralized Subsurface Gray,--,Condition,
+Built Environment Density,Percent Impervious,>=90 and <100,Decentralized Surface Green,-,Condition,
+Built Environment Density,Percent Impervious,>=90 and <100,Decentralized Roof Top Green,+,Condition,
+Built Environment Density,Percent Impervious,>=90 and <100,Decentralized Surface Gray,+,Condition,
+Built Environment Density,Percent Impervious,>=90 and <100,Decentralized Subsurface Gray,++,Condition,
+Built Environment Density,Percent Impervious,>=90 and <100,Centralized Surface Green,--,Condition,
+Built Environment Density,Percent Impervious,>=90 and <100,Centralized Subsurface Gray,+,Condition,
+Built Environment Density,Percent Impervious,>=75 and <90,Decentralized Surface Green,+,Condition,
+Built Environment Density,Percent Impervious,>=75 and <90,Decentralized Roof Top Green,+,Condition,
+Built Environment Density,Percent Impervious,>=75 and <90,Decentralized Surface Gray,+,Condition,
+Built Environment Density,Percent Impervious,>=75 and <90,Decentralized Subsurface Gray,+,Condition,
+Built Environment Density,Percent Impervious,>=75 and <90,Centralized Surface Green,-,Condition,
+Built Environment Density,Percent Impervious,>=75 and <90,Centralized Subsurface Gray,+,Condition,
+Built Environment Density,Percent Impervious,>=25 and <75,Decentralized Surface Green,+,Condition,
+Built Environment Density,Percent Impervious,>=25 and <75,Decentralized Roof Top Green,-,Condition,
+Built Environment Density,Percent Impervious,>=25 and <75,Decentralized Surface Gray,+,Condition,
+Built Environment Density,Percent Impervious,>=25 and <75,Decentralized Subsurface Gray,-,Condition,
+Built Environment Density,Percent Impervious,>=25 and <75,Centralized Surface Green,+,Condition,
+Built Environment Density,Percent Impervious,>=25 and <75,Centralized Subsurface Gray,-,Condition,
+Built Environment Density,Percent Impervious,>=0 and <25,Decentralized Surface Green,+,Condition,
+Built Environment Density,Percent Impervious,>=0 and <25,Decentralized Roof Top Green,-,Condition,
+Built Environment Density,Percent Impervious,>=0 and <25,Decentralized Surface Gray,-,Condition,
+Built Environment Density,Percent Impervious,>=0 and <25,Decentralized Subsurface Gray,-,Condition,
+Built Environment Density,Percent Impervious,>=0 and <25,Centralized Surface Green,++,Condition,
+Built Environment Density,Percent Impervious,>=0 and <25,Centralized Subsurface Gray,--,Condition,
+Built Environment Density,Average Building Height,>=100,Decentralized Surface Green,-,Condition,
+Built Environment Density,Average Building Height,>=100,Decentralized Roof Top Green,-,Condition,
+Built Environment Density,Average Building Height,>=100,Decentralized Surface Gray,-,Condition,
+Built Environment Density,Average Building Height,>=100,Decentralized Subsurface Gray,+,Condition,
+Built Environment Density,Average Building Height,>=100,Centralized Surface Green,-,Condition,
+Built Environment Density,Average Building Height,>=100,Centralized Subsurface Gray,+,Condition,
+Built Environment Density,Average Building Height,>=40 and <100,Decentralized Surface Green,+,Condition,
+Built Environment Density,Average Building Height,>=40 and <100,Decentralized Roof Top Green,+,Condition,
+Built Environment Density,Average Building Height,>=40 and <100,Decentralized Surface Gray,+,Condition,
+Built Environment Density,Average Building Height,>=40 and <100,Decentralized Subsurface Gray,-,Condition,
+Built Environment Density,Average Building Height,>=40 and <100,Centralized Surface Green,+,Condition,
+Built Environment Density,Average Building Height,>=40 and <100,Centralized Subsurface Gray,+,Condition,
+Built Environment Density,Average Building Height,<40,Decentralized Surface Green,+,Condition,
+Built Environment Density,Average Building Height,<40,Decentralized Roof Top Green,+,Condition,
+Built Environment Density,Average Building Height,<40,Decentralized Surface Gray,+,Condition,
+Built Environment Density,Average Building Height,<40,Decentralized Subsurface Gray,+,Condition,
+Built Environment Density,Average Building Height,<40,Centralized Surface Green,+,Condition,
+Built Environment Density,Average Building Height,<40,Centralized Subsurface Gray,+,Condition,
+Subsurface Boundaries,Bedrock Depth,<3,Decentralized Surface Green,--,Condition,
+Subsurface Boundaries,Bedrock Depth,<3,Decentralized Roof Top Green,=,Condition,
+Subsurface Boundaries,Bedrock Depth,<3,Decentralized Surface Gray,-,Condition,
+Subsurface Boundaries,Bedrock Depth,<3,Decentralized Subsurface Gray,--,Condition,
+Subsurface Boundaries,Bedrock Depth,<3,Centralized Surface Green,--,Condition,
+Subsurface Boundaries,Bedrock Depth,<3,Centralized Subsurface Gray,=,Condition,
+Subsurface Boundaries,Bedrock Depth,>=3 and <8,Decentralized Surface Green,-,Condition,
+Subsurface Boundaries,Bedrock Depth,>=3 and <8,Decentralized Roof Top Green,=,Condition,
+Subsurface Boundaries,Bedrock Depth,>=3 and <8,Decentralized Surface Gray,+,Condition,
+Subsurface Boundaries,Bedrock Depth,>=3 and <8,Decentralized Subsurface Gray,-,Condition,
+Subsurface Boundaries,Bedrock Depth,>=3 and <8,Centralized Surface Green,+,Condition,
+Subsurface Boundaries,Bedrock Depth,>=3 and <8,Centralized Subsurface Gray,=,Condition,
+Subsurface Boundaries,Bedrock Depth,>=8,Decentralized Surface Green,+,Condition,
+Subsurface Boundaries,Bedrock Depth,>=8,Decentralized Roof Top Green,=,Condition,
+Subsurface Boundaries,Bedrock Depth,>=8,Decentralized Surface Gray,+,Condition,
+Subsurface Boundaries,Bedrock Depth,>=8,Decentralized Subsurface Gray,+,Condition,
+Subsurface Boundaries,Bedrock Depth,>=8,Centralized Surface Green,+,Condition,
+Subsurface Boundaries,Bedrock Depth,>=8,Centralized Subsurface Gray,=,Condition,
+Subsurface Boundaries,Groundwater,<3,Decentralized Surface Green,--,Condition,
+Subsurface Boundaries,Groundwater,<3,Decentralized Roof Top Green,=,Condition,
+Subsurface Boundaries,Groundwater,<3,Decentralized Surface Gray,-,Condition,
+Subsurface Boundaries,Groundwater,<3,Decentralized Subsurface Gray,--,Condition,
+Subsurface Boundaries,Groundwater,<3,Centralized Surface Green,--,Condition,
+Subsurface Boundaries,Groundwater,<3,Centralized Subsurface Gray,=,Condition,
+Subsurface Boundaries,Groundwater,>=3 and <8,Decentralized Surface Green,-,Condition,
+Subsurface Boundaries,Groundwater,>=3 and <8,Decentralized Roof Top Green,=,Condition,
+Subsurface Boundaries,Groundwater,>=3 and <8,Decentralized Surface Gray,+,Condition,
+Subsurface Boundaries,Groundwater,>=3 and <8,Decentralized Subsurface Gray,-,Condition,
+Subsurface Boundaries,Groundwater,>=3 and <8,Centralized Surface Green,+,Condition,
+Subsurface Boundaries,Groundwater,>=3 and <8,Centralized Subsurface Gray,=,Condition,
+Subsurface Boundaries,Groundwater,>=8,Decentralized Surface Green,+,Condition,
+Subsurface Boundaries,Groundwater,>=8,Decentralized Roof Top Green,=,Condition,
+Subsurface Boundaries,Groundwater,>=8,Decentralized Surface Gray,+,Condition,
+Subsurface Boundaries,Groundwater,>=8,Decentralized Subsurface Gray,+,Condition,
+Subsurface Boundaries,Groundwater,>=8,Centralized Surface Green,+,Condition,
+Subsurface Boundaries,Groundwater,>=8,Centralized Subsurface Gray,=,Condition,
+,,,Decentralized Surface Green,+,Driver,Water Quality - CSO
+,,,Decentralized Roof Top Green,+,Driver,Water Quality - CSO
+,,,Decentralized Surface Gray,+,Driver,Water Quality - CSO
+,,,Decentralized Subsurface Gray,+,Driver,Water Quality - CSO
+,,,Centralized Surface Green,-,Driver,Water Quality - CSO
+,,,Centralized Subsurface Gray,+,Driver,Water Quality - CSO
+,,,Decentralized Surface Green,+,Driver,Water Quality - MS4
+,,,Decentralized Roof Top Green,-,Driver,Water Quality - MS4
+,,,Decentralized Surface Gray,+,Driver,Water Quality - MS4
+,,,Decentralized Subsurface Gray,-,Driver,Water Quality - MS4
+,,,Centralized Surface Green,+,Driver,Water Quality - MS4
+,,,Centralized Subsurface Gray,--,Driver,Water Quality - MS4
+,,,Decentralized Surface Green,-,Driver,Water Quantity - Flood Mitigation (Riverine)
+,,,Decentralized Roof Top Green,-,Driver,Water Quantity - Flood Mitigation (Riverine)
+,,,Decentralized Surface Gray,-,Driver,Water Quantity - Flood Mitigation (Riverine)
+,,,Decentralized Subsurface Gray,-,Driver,Water Quantity - Flood Mitigation (Riverine)
+,,,Centralized Surface Green,++,Driver,Water Quantity - Flood Mitigation (Riverine)
+,,,Centralized Subsurface Gray,-,Driver,Water Quantity - Flood Mitigation (Riverine)
+,,,Decentralized Surface Green,-,Driver,Water Quantity - Flood Mitigation (Coastal)
+,,,Decentralized Roof Top Green,-,Driver,Water Quantity - Flood Mitigation (Coastal)
+,,,Decentralized Surface Gray,-,Driver,Water Quantity - Flood Mitigation (Coastal)
+,,,Decentralized Subsurface Gray,-,Driver,Water Quantity - Flood Mitigation (Coastal)
+,,,Centralized Surface Green,+,Driver,Water Quantity - Flood Mitigation (Coastal)
+,,,Centralized Subsurface Gray,-,Driver,Water Quantity - Flood Mitigation (Coastal)
+,,,Decentralized Surface Green,++,Driver,Water Quantity - Stormwater (Nuisance)
+,,,Decentralized Roof Top Green,+,Driver,Water Quantity - Stormwater (Nuisance)
+,,,Decentralized Surface Gray,+,Driver,Water Quantity - Stormwater (Nuisance)
+,,,Decentralized Subsurface Gray,++,Driver,Water Quantity - Stormwater (Nuisance)
+,,,Centralized Surface Green,-,Driver,Water Quantity - Stormwater (Nuisance)
+,,,Centralized Subsurface Gray,-,Driver,Water Quantity - Stormwater (Nuisance)
+,,,Decentralized Surface Green,-,Driver,Water Quantity - Stormwater (Extreme)
+,,,Decentralized Roof Top Green,-,Driver,Water Quantity - Stormwater (Extreme)
+,,,Decentralized Surface Gray,-,Driver,Water Quantity - Stormwater (Extreme)
+,,,Decentralized Subsurface Gray,+,Driver,Water Quantity - Stormwater (Extreme)
+,,,Centralized Surface Green,++,Driver,Water Quantity - Stormwater (Extreme)
+,,,Centralized Subsurface Gray,+,Driver,Water Quantity - Stormwater (Extreme)
+,,,Decentralized Surface Green,+,Driver,Water Quantity - Basement Backups
+,,,Decentralized Roof Top Green,-,Driver,Water Quantity - Basement Backups
+,,,Decentralized Surface Gray,+,Driver,Water Quantity - Basement Backups
+,,,Decentralized Subsurface Gray,+,Driver,Water Quantity - Basement Backups
+,,,Centralized Surface Green,--,Driver,Water Quantity - Basement Backups
+,,,Centralized Subsurface Gray,-,Driver,Water Quantity - Basement Backups
+,,,Decentralized Surface Green,+,Driver,Water Quantity - Scarcity/Supply
+,,,Decentralized Roof Top Green,+,Driver,Water Quantity - Scarcity/Supply
+,,,Decentralized Surface Gray,+,Driver,Water Quantity - Scarcity/Supply
+,,,Decentralized Subsurface Gray,+,Driver,Water Quantity - Scarcity/Supply
+,,,Centralized Surface Green,+,Driver,Water Quantity - Scarcity/Supply
+,,,Centralized Subsurface Gray,+,Driver,Water Quantity - Scarcity/Supply
+,,,Decentralized Surface Green,++,Driver,Co-Benefits
+,,,Decentralized Roof Top Green,+,Driver,Co-Benefits
+,,,Decentralized Surface Gray,--,Driver,Co-Benefits
+,,,Decentralized Subsurface Gray,--,Driver,Co-Benefits
+,,,Centralized Surface Green,+,Driver,Co-Benefits
+,,,Centralized Subsurface Gray,--,Driver,Co-Benefits

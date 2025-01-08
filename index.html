@@ -440,13 +440,13 @@ let rubricData = null; // Ensure rubricData is initialized
 
           if (e.target.checked) {
             // Add driver details to feature properties
-            feature.properties.drivers[driverName] = {
+            initializeDrivers[driverName] = {
               score: driverScore,
               strategy: driverStrategy,
             };
           } else {
             // Remove driver details if unchecked
-            delete feature.properties.drivers[driverName];
+            delete initializeDrivers[driverName];
           }
         }
       });
@@ -579,18 +579,14 @@ let rubricData = null; // Ensure rubricData is initialized
 
       L.geoJSON(geojson, {
           onEachFeature: (feature, layer) => {
-              const boundaryName = feature.properties[nameField] || "No Name";
-
-              layer.bindPopup(() => {
-                  const popupContent = generatePopupContent(feature, nameField);
-                  return popupContent;
-              });
+              layer.bindPopup(() => generatePopupContent(feature, nameField));
 
               const label = L.divIcon({
                   className: "boundary-label",
-                  html: `<span>${boundaryName}</span>`,
+                  html: `<span>${feature.properties[nameField] || "No Name"}</span>`,
                   iconSize: [100, 40],
               });
+
               const center = turf.center(feature).geometry.coordinates;
               L.marker([center[1], center[0]], { icon: label }).addTo(map);
           },
@@ -603,27 +599,30 @@ let rubricData = null; // Ensure rubricData is initialized
   }
 
   function generatePopupContent(feature, nameField) {
-    const boundaryName = feature.properties[nameField] || "No Name";
-    const selectedDrivers = Object.keys(feature.properties.drivers || {});
+      const boundaryName = feature.properties[nameField] || "No Name";
 
-    // Build driver details dynamically
-    const driverDetails = selectedDrivers
-      .map((driver) => {
-        const strategies = driverStrategyScores[driver] || [];
-        const strategyDetails = strategies
-          .map(
-            (entry) =>
-              `<b>Strategy:</b> ${entry.strategy}, <b>Score:</b> ${entry.score}`
-          )
-          .join("<br>");
-        return `<b>${driver}</b><br>${strategyDetails}`;
-      })
-      .join("<br><br>");
+      const drivers = feature.properties.drivers || {};
+      const driverDetails = Object.entries(drivers)
+          .map(([driver, driverData]) => {
+              if (!driverStrategyScores[driver]) {
+                  return `<b>${driver}:</b> No strategies available`;
+              }
 
-    return `
-      <b>${boundaryName}</b><br>
-      ${driverDetails || "No drivers selected"}
-    `;
+              // Map through all strategies for the driver and display them
+              const strategies = driverStrategyScores[driver]
+                  .map(strategyObj => {
+                      return `Strategy: ${strategyObj.strategy}, <b>Score:</b> ${strategyObj.score}`;
+                  })
+                  .join("<br>");
+
+              return `<b>${driver}:</b><br>${strategies}`;
+          })
+          .join("<br><br>");
+
+      return `
+          <b>${boundaryName}</b><br>
+          ${driverDetails || "No drivers selected"}
+      `;
   }
 
 
@@ -701,6 +700,14 @@ let rubricData = null; // Ensure rubricData is initialized
           "--": -2
       };
       return scoreMap[score] ?? 0; // Default to 0 for unknown scores
+  }
+
+  function initializeDrivers(neighborhoodIndex) {
+      const feature = boundaryData.features[neighborhoodIndex];
+      if (!feature.properties.drivers) {
+          feature.properties.drivers = {};
+      }
+      return feature.properties.drivers;
   }
 
 
@@ -978,52 +985,63 @@ let rubricData = null; // Ensure rubricData is initialized
       .join("<br>");
   }
 
+  function updateDriverData(neighborhoodIndex, driverName, isChecked) {
+      const feature = boundaryData.features[neighborhoodIndex];
+      const drivers = initializeDrivers(neighborhoodIndex);
+
+      const driverEntry = rubricData.find((row) => row.Driver === driverName);
+      if (!driverEntry) {
+          console.warn(`Driver entry for '${driverName}' not found`);
+          return;
+      }
+
+      const driverScore = parseScore(driverEntry.Score.trim());
+      const driverStrategy = driverEntry.Strategy;
+
+      if (isChecked) {
+          drivers[driverName] = { score: driverScore, strategy: driverStrategy };
+      } else {
+          delete drivers[driverName];
+      }
+  }
+
 
   function attachDriverCheckboxListeners() {
-    const driverCheckboxes = document.querySelectorAll(
-      "#results-table input[type='checkbox']"
-    );
+      const driverCheckboxes = document.querySelectorAll("#results-table input[type='checkbox']");
+      driverCheckboxes.forEach((checkbox) => {
+          checkbox.addEventListener("change", () => {
+              const neighborhoodIndex = parseInt(checkbox.dataset.neighborhoodIndex, 10);
+              const driverName = checkbox.dataset.driver;
 
-    driverCheckboxes.forEach((checkbox) => {
-      checkbox.addEventListener("change", () => {
-        const neighborhoodIndex = parseInt(
-          checkbox.dataset.neighborhoodIndex,
-          10
-        );
-        const driverName = checkbox.dataset.driver;
+              if (!boundaryData || !boundaryData.features[neighborhoodIndex]) {
+                  console.error("Invalid neighborhood index or boundary data");
+                  return;
+              }
 
-        // Ensure boundary data and neighborhood exist
-        if (
-          !boundaryData ||
-          !boundaryData.features ||
-          !boundaryData.features[neighborhoodIndex]
-        ) {
-          console.error("Boundary data or neighborhood index is invalid");
-          return;
-        }
+              const feature = boundaryData.features[neighborhoodIndex];
+              const drivers = initializeDrivers(neighborhoodIndex);
 
-        const feature = boundaryData.features[neighborhoodIndex];
+              if (checkbox.checked) {
+                  // Fetch driver strategy and score
+                  const driverEntry = driverStrategyScores[driverName]?.find((entry) => entry.strategy);
+                  if (driverEntry) {
+                      drivers[driverName] = {
+                          score: driverEntry.score,
+                          strategy: driverEntry.strategy,
+                      };
+                  } else {
+                      console.warn(`Driver entry not found for '${driverName}'`);
+                  }
+              } else {
+                  delete drivers[driverName];
+              }
 
-        // Ensure drivers object is initialized
-        if (!feature.properties.drivers) {
-          feature.properties.drivers = {};
-        }
-
-        if (checkbox.checked) {
-          // Add driver to selected drivers
-          feature.properties.drivers[driverName] = true;
-        } else {
-          // Remove driver from selected drivers
-          delete feature.properties.drivers[driverName];
-        }
-
-        // Refresh the map to reflect updated driver data in popups
-        const selectedNameField =
-          document.getElementById("name-field-dropdown").value;
-        displayBoundaryOnMap(boundaryData, selectedNameField);
+              // Update the map popup dynamically
+              refreshMap();
+          });
       });
-    });
   }
+
 
 function recalculateCombinedScores(neighborhoodIndex, results) {
     const neighborhood = results[neighborhoodIndex];
@@ -1149,6 +1167,19 @@ function recalculateCombinedScores(neighborhoodIndex, results) {
       },
     }).addTo(map);
   }
+
+  function refreshMap() {
+      const selectedNameField = document.getElementById("name-field-dropdown").value;
+
+      if (!selectedNameField) {
+          console.error("No name field selected for boundaries");
+          return;
+      }
+
+      // Redisplay boundaries and update the map
+      displayBoundaryOnMap(boundaryData, selectedNameField);
+  }
+
 
   // Update Status Message
   function updateStatusMessage(message, color) {

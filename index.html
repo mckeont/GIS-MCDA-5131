@@ -272,6 +272,7 @@
           </thead>
           <tbody></tbody>
       </table>
+      <div> <button id="export-btn">Export to CSV</button> </div>
     </div>
   </div>
 
@@ -1209,6 +1210,31 @@ function recalculateCombinedScores(neighborhoodIndex, results) {
         statusMessage.textContent = ''; // Clear message after success
       }, 3000);
     }
+  }
+
+
+  document.getElementById("export-btn").addEventListener("click", exportTableToCSV);
+
+  function exportTableToCSV() {
+      const rows = document.querySelectorAll("#results-table tr");
+      let csvContent = "";
+
+      rows.forEach((row) => {
+          const cells = row.querySelectorAll("th, td");
+          const rowContent = Array.from(cells)
+              .map((cell) => cell.textContent.trim())
+              .join(",");
+          csvContent += rowContent + "\n";
+      });
+
+      // Create a download link for the CSV
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "results.csv";
+      a.click();
+      URL.revokeObjectURL(url);
   }
 
 </script>

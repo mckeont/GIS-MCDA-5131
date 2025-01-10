@@ -171,13 +171,14 @@
 </head>
 <body>
   <div id="app">
-    <h1> </h1>
+    <h1></h1>
 
     <div id="upload-section">
-      <h3> </h3>
+      <h2>Upload Your Data</h2>
 
       <div class="accordion">
-        <button class="accordion-btn">Boundary Data (Neighborhoods)</button>
+        <!-- Boundary Data Section -->
+        <button class="accordion-btn">1. Boundary Data (Neighborhoods)</button>
         <div class="accordion-content">
           <label>Field for Neighborhood Names:</label>
           <select id="name-field-dropdown">
@@ -186,7 +187,8 @@
           <input type="file" id="boundary-file" accept=".geojson">
         </div>
 
-        <button class="accordion-btn">Terrain Data</button>
+        <!-- Terrain Data Section -->
+        <button class="accordion-btn">2. Terrain Data</button>
         <div class="accordion-content">
           <label>Slope GeoJSON:</label>
           <input type="file" id="terrain-file" accept=".geojson"><br>
@@ -196,40 +198,48 @@
           </select>
         </div>
 
-
-        <button class="accordion-btn">Built Environment Density</button>
+        <!-- Built Environment Density Section -->
+        <button class="accordion-btn">3. Built Environment Density</button>
         <div class="accordion-content">
-          <label>Population Density:</label>
-          <input type="file" id="density-population" accept=".geojson"><br>
-          <label>Select Field for Population Density:</label>
-          <select id="population-field-dropdown"></select>
-
-          <label>% Impervious Surface:</label>
-          <input type="file" id="density-impervious" accept=".geojson"><br>
-          <label>Select Field for % Impervious Surface:</label>
-          <select id="impervious-field-dropdown"></select>
-
-          <label>Avg. Building Height:</label>
-          <input type="file" id="density-building" accept=".geojson"><br>
-          <label>Select Field for Building Height:</label>
-          <select id="building-field-dropdown"></select>
+          <div>
+            <label>Population Density:</label>
+            <input type="file" id="density-population" accept=".geojson"><br>
+            <label>Select Field for Population Density:</label>
+            <select id="population-field-dropdown"></select>
+          </div>
+          <div>
+            <label>% Impervious Surface:</label>
+            <input type="file" id="density-impervious" accept=".geojson"><br>
+            <label>Select Field for % Impervious Surface:</label>
+            <select id="impervious-field-dropdown"></select>
+          </div>
+          <div>
+            <label>Avg. Building Height:</label>
+            <input type="file" id="density-building" accept=".geojson"><br>
+            <label>Select Field for Building Height:</label>
+            <select id="building-field-dropdown"></select>
+          </div>
         </div>
 
-        <button class="accordion-btn">Subsurface Boundaries</button>
+        <!-- Subsurface Boundaries Section -->
+        <button class="accordion-btn">4. Subsurface Boundaries</button>
         <div class="accordion-content">
-          <label>Bedrock Depth:</label>
-          <input type="file" id="subsurface-bedrock" accept=".geojson"><br>
-          <label>Select Field for Bedrock Depth:</label>
-          <select id="bedrock-field-dropdown"></select>
-
-          <label>Groundwater Depth:</label>
-          <input type="file" id="subsurface-groundwater" accept=".geojson"><br>
-          <label>Select Field for Groundwater Depth:</label>
-          <select id="groundwater-field-dropdown"></select>
+          <div>
+            <label>Bedrock Depth:</label>
+            <input type="file" id="subsurface-bedrock" accept=".geojson"><br>
+            <label>Select Field for Bedrock Depth:</label>
+            <select id="bedrock-field-dropdown"></select>
+          </div>
+          <div>
+            <label>Groundwater Depth:</label>
+            <input type="file" id="subsurface-groundwater" accept=".geojson"><br>
+            <label>Select Field for Groundwater Depth:</label>
+            <select id="groundwater-field-dropdown"></select>
+          </div>
         </div>
 
-
-        <button class="accordion-btn">Scoring Rubric</button>
+        <!-- Scoring Rubric Section -->
+        <button class="accordion-btn">5. Scoring Rubric</button>
         <div class="accordion-content">
           <label>Scoring Rubric CSV:</label>
           <input type="file" id="rubric" accept=".csv">
@@ -511,7 +521,10 @@ let rubricData = null; // Ensure rubricData is initialized
     reader.onload = (e) => {
       const data = JSON.parse(e.target.result);
       switch (type) {
-        case 'slope': slopeData = data; break;
+        case 'slope':
+            slopeData = data;
+            populateFieldDropdown(extractFields(data), dropdownId); // Allow user to select the field
+            break;
         case 'population': populationData = data; populateFieldDropdown(extractFields(data), dropdownId); break;
         case 'impervious': imperviousData = data; populateFieldDropdown(extractFields(data), dropdownId); break;
         case 'building': buildingData = data; populateFieldDropdown(extractFields(data), dropdownId); break;
@@ -734,15 +747,18 @@ let rubricData = null; // Ensure rubricData is initialized
       const buildingField = document.getElementById("building-field-dropdown").value;
       const bedrockField = document.getElementById("bedrock-field-dropdown").value;
       const groundwaterField = document.getElementById("groundwater-field-dropdown").value;
-
+      const slopeField = document.getElementById('slope-field-dropdown').value;
       // Get driver checkboxes
       const driverCheckboxes = document.querySelectorAll("#driver-checkboxes input[type='checkbox']");
 
       const results = boundaryData.features.map((neighborhood) => {
           const name = neighborhood.properties[nameField];
 
+
+
+
           // Calculate metrics for each condition subcategory
-          const avgSlope = calculateMetric(slopeData, neighborhood, "value");
+          const avgSlope = calculateMetric(slopeData, neighborhood, slopeField);
           const avgPopulation = calculateMetric(populationData, neighborhood, populationField);
           const avgImpervious = calculateMetric(imperviousData, neighborhood, imperviousField);
           const avgBuilding = calculateMetric(buildingData, neighborhood, buildingField);

@@ -2,1241 +2,242 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <title>Wet Weather BMP Suitability</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wet Weather Control Strategy Calculator</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
-<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-  }
-
-  #app {
-    max-width: 900px;
-    margin: 20px auto;
-    text-align: center;
-  }
-
-  #upload-section {
-    margin-bottom: 20px;
-  }
-
-  #map-container {
-    margin: 20px 0;
-  }
-
-  #map {
-    height: 400px;
-    border: 1px solid #ccc;
-  }
-
-  #results {
-    margin: 20px 0;
-  }
-
-  /* Styling for #results-table */
-  #results-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-  }
-
-  #results-table th, #results-table td {
-    border: 1px solid #ddd;
-    padding: 12px 8px;
-    text-align: center;
-  }
-
-  #results-table th {
-    background-color: #f2f2f2; /* Light gray background for headers */
-  }
-
-  #results-table td[colspan="8"] {
-    text-align: left; /* Align merged cells for neighborhood names */
-    background-color: #fafafa; /* Subtle background for neighborhood rows */
-    font-weight: bold;
-  }
-
-  /* Alternating row colors */
-  #results-table tr:nth-child(even) {
-    background-color: #f9f9f9;
-  }
-
-  #results-table tr:nth-child(odd) {
-    background-color: #ffffff;
-  }
-
-  /* Prevent wrapping for specific columns */
-  #results-table th:nth-child(3), #results-table td:nth-child(3) {
-    white-space: nowrap;
-  }
-
-  /* Allow wrapping for long Suggested Strategy and Suitability columns */
-  #results-table th:nth-child(5), #results-table td:nth-child(5),
-  #results-table th:nth-child(6), #results-table td:nth-child(6) {
-    white-space: normal;
-    word-break: break-word;
-  }
-
-  /* Set consistent widths for specific columns */
-  #results-table th:nth-child(4), #results-table td:nth-child(4),
-  #results-table th:nth-child(7), #results-table td:nth-child(7),
-  #results-table th:nth-child(8), #results-table td:nth-child(8) {
-    width: 80px;
-  }
-
-  /* Set consistent width for input fields */
-  .weight-input {
-    width: 60px;
-    vertical-align: middle;
-  }
-
-  /* Add hover effect for rows */
-  #results-table tr:hover {
-    background-color: #f1f1f1;
-    transition: background-color 0.3s ease;
-  }
-
-  /* Reset input, select, and button styles */
-  input, select, button {
-    font-family: Arial, sans-serif;
-    font-size: 14px;
-    padding: 5px 10px;
-    margin: 5px 0;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-  }
-
-  button#process-btn {
-    background-color: #2196F3; /* Soft blue */
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-
-  button#process-btn:hover {
-    background-color: #1976D2; /* Slightly darker blue */
-    transform: scale(1.05);
-  }
-
-  /* Accordion button styles */
-  .accordion-btn {
-    background: linear-gradient(to right, #0A2A37, #174E61);
-    color: white;
-    cursor: pointer;
-    padding: 10px 15px;
-    width: 100%;
-    text-align: left;
-    border: none;
-    outline: none;
-    font-size: 16px;
-    font-weight: bold;
-    border-radius: 5px;
-    margin-bottom: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-  }
-
-  .accordion-btn:hover {
-    background: linear-gradient(to right, #14505C, #1C6C80);
-    transform: translateY(-2px);
-  }
-
-  .boundary-label {
-  font-size: 12px;
-  font-weight: bold;
-  color: black;
-  text-shadow: 1px 1px 2px white;
-  pointer-events: none; /* Prevent interaction with the label */
-}
-
-
-  /* Responsive table for small screens */
-  @media (max-width: 768px) {
-    #results-table {
-      display: block;
-      overflow-x: auto;
-      white-space: nowrap;
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; padding:0; }
+    #controls { padding: 1em; background:#f8f8f8; }
+    #map { height: 400px; }
+    table { width:100%; border-collapse:collapse; margin-top:1em; }
+    th, td { border:1px solid #ccc; padding:6px; vertical-align: top; }
+    th { background:#e0f7fa; }
+    .inner-table { width:100%; border-collapse:collapse; margin:4px 0; }
+    .inner-table th, .inner-table td { border:1px solid #ddd; padding:4px; font-size:0.9em; }
+    .driver-checkboxes {
+      /* increase max-height for more visible items */
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 2px;
+      font-size: 0.8em;
+      line-height: 1.2em;
+      /* take full cell width */
+      width: 100%;
     }
-  }
-</style>
-
+    .driver-group { margin-bottom:8px; }
+    .driver-group h4 { margin:4px 0; font-size:0.9em; }
+    .driver-group label { display:block; margin-left:8px; }
+    #status { margin-top:.5em; height:1em; color: green; }
+  </style>
 </head>
 <body>
-  <div id="app">
-    <h1></h1>
-
-    <div id="upload-section">
-      <h2>Data Upload</h2>
-
-      <div class="accordion">
-        <!-- Boundary Data Section -->
-        <button class="accordion-btn">1. Planning Area</button>
-        <div class="accordion-content">
-          <label>Field for Neighborhood Names:</label>
-          <select id="name-field-dropdown">
-            <option value="" disabled selected>Select a field</option>
-          </select>
-          <input type="file" id="boundary-file" accept=".geojson">
-        </div>
-
-        <!-- Terrain Data Section -->
-        <button class="accordion-btn">2. Terrain Data</button>
-        <div class="accordion-content">
-          <label>Slope GeoJSON:</label>
-          <input type="file" id="terrain-file" accept=".geojson"><br>
-          <label>Select Field for Slope:</label>
-          <select id="slope-field-dropdown">
-            <option value="" disabled selected>Select a field</option>
-          </select>
-        </div>
-
-        <!-- Built Environment Density Section -->
-        <button class="accordion-btn">3. Built Environment Density</button>
-        <div class="accordion-content">
-          <div>
-            <label>Population Density:</label>
-            <input type="file" id="density-population" accept=".geojson"><br>
-            <label>Select Field for Population Density:</label>
-            <select id="population-field-dropdown"></select>
-          </div>
-          <div>
-            <label>% Impervious Surface:</label>
-            <input type="file" id="density-impervious" accept=".geojson"><br>
-            <label>Select Field for % Impervious Surface:</label>
-            <select id="impervious-field-dropdown"></select>
-          </div>
-          <div>
-            <label>Avg. Building Height:</label>
-            <input type="file" id="density-building" accept=".geojson"><br>
-            <label>Select Field for Building Height:</label>
-            <select id="building-field-dropdown"></select>
-          </div>
-        </div>
-
-        <!-- Subsurface Boundaries Section -->
-        <button class="accordion-btn">4. Subsurface Boundaries</button>
-        <div class="accordion-content">
-          <div>
-            <label>Bedrock Depth:</label>
-            <input type="file" id="subsurface-bedrock" accept=".geojson"><br>
-            <label>Select Field for Bedrock Depth:</label>
-            <select id="bedrock-field-dropdown"></select>
-          </div>
-          <div>
-            <label>Groundwater Depth:</label>
-            <input type="file" id="subsurface-groundwater" accept=".geojson"><br>
-            <label>Select Field for Groundwater Depth:</label>
-            <select id="groundwater-field-dropdown"></select>
-          </div>
-        </div>
-
-        <!-- Scoring Rubric Section -->
-        <button class="accordion-btn">5. Scoring Rubric</button>
-        <div class="accordion-content">
-          <label>Scoring Rubric CSV:</label>
-          <input type="file" id="rubric" accept=".csv">
-        </div>
-      </div>
-
-      <br>
-      <button id="process-btn">Process</button>
-      <div id="status-message"></div>
-    </div>
-
-    <div id="map-container">
-      <h2>Map</h2>
-      <div id="map"></div>
-    </div>
-
-    <div id="results">
-      <h2>Results</h2>
-      <table id="results-table">
-          <thead>
-              <tr>
-                  <th>Name</th>
-                  <th>Category</th>
-                  <th>Subcategory</th>
-                  <th>Average Value</th>
-                  <th>Base Score</th>
-                  <th>Suggested Strategy</th>
-                  <th>Suitability</th>
-              </tr>
-          </thead>
-          <tbody></tbody>
-      </table>
-      <div> <button id="export-btn">Export to CSV</button> </div>
-    </div>
+  <div id="controls">
+    <h2>1. Load Planning Districts GeoJSON</h2>
+    <input type="file" id="geojsonInput" accept=".geojson"/>
+    <h2>2. Load Scoring Rubric CSV</h2>
+    <input type="file" id="csvInput" accept=".csv"/>
+    <button id="processBtn">Run Suitability Calculator</button>
+    <div id="status"></div>
   </div>
 
+  <div id="map"></div>
+
+  <table id="resultsTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Strategy Scores</th>
+        <th style="width:220px;">Drivers</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
   <script>
-  // Include Turf.js for spatial operations
-  const turf = window.turf;
+  let geoData=null, rubric=null, results=[], driversList=[];
+  let selectedDrivers={};
 
-  const categories = [
-  { name: "Terrain", subcategories: ["slope"] },
-  { name: "Built Environment", subcategories: ["population", "impervious", "building"] },
-  { name: "Subsurface", subcategories: ["bedrock", "groundwater"] },
-];
-
-const drivers = [
-  "Water Quality - CSO",
-  "Water Quality - MS4",
-  "Water Quantity - Flood Mitigation (Riverine)",
-  "Water Quantity - Flood Mitigation (Coastal)",
-  "Water Quantity - Stormwater (Nuisance)",
-  "Water Quantity - Stormwater (Extreme)",
-  "Water Quantity - Basement Backups",
-  "Water Quantity - Scarcity/Supply",
-  "Co-Benefits",
-];
-
-const driverStrategyScores = {
-  "Water Quality - CSO": [
-    { strategy: "Decentralized Surface Green", score: "+" },
-    { strategy: "Decentralized Roof Top Green", score: "+" },
-    { strategy: "Decentralized Surface Gray", score: "+" },
-    { strategy: "Decentralized Subsurface Gray", score: "+" },
-    { strategy: "Centralized Surface Green", score: "-" },
-    { strategy: "Centralized Subsurface Gray", score: "+" },
-  ],
-  "Water Quality - MS4": [
-    { strategy: "Decentralized Surface Green", score: "+" },
-    { strategy: "Decentralized Roof Top Green", score: "-" },
-    { strategy: "Decentralized Surface Gray", score: "+" },
-    { strategy: "Decentralized Subsurface Gray", score: "-" },
-    { strategy: "Centralized Surface Green", score: "+" },
-    { strategy: "Centralized Subsurface Gray", score: "--" },
-  ],
-  "Water Quantity - Flood Mitigation (Riverine)": [
-    { strategy: "Decentralized Surface Green", score: "-" },
-    { strategy: "Decentralized Roof Top Green", score: "-" },
-    { strategy: "Decentralized Surface Gray", score: "-" },
-    { strategy: "Decentralized Subsurface Gray", score: "-" },
-    { strategy: "Centralized Surface Green", score: "++" },
-    { strategy: "Centralized Subsurface Gray", score: "-" },
-  ],
-  "Water Quantity - Flood Mitigation (Coastal)": [
-    { strategy: "Decentralized Surface Green", score: "-" },
-    { strategy: "Decentralized Roof Top Green", score: "-" },
-    { strategy: "Decentralized Surface Gray", score: "-" },
-    { strategy: "Decentralized Subsurface Gray", score: "-" },
-    { strategy: "Centralized Surface Green", score: "+" },
-    { strategy: "Centralized Subsurface Gray", score: "-" },
-  ],
-  "Water Quantity - Stormwater (Nuisance)": [
-    { strategy: "Decentralized Surface Green", score: "++" },
-    { strategy: "Decentralized Roof Top Green", score: "+" },
-    { strategy: "Decentralized Surface Gray", score: "+" },
-    { strategy: "Decentralized Subsurface Gray", score: "++" },
-    { strategy: "Centralized Surface Green", score: "-" },
-    { strategy: "Centralized Subsurface Gray", score: "-" },
-  ],
-  "Water Quantity - Stormwater (Extreme)": [
-    { strategy: "Decentralized Surface Green", score: "-" },
-    { strategy: "Decentralized Roof Top Green", score: "-" },
-    { strategy: "Decentralized Surface Gray", score: "-" },
-    { strategy: "Decentralized Subsurface Gray", score: "+" },
-    { strategy: "Centralized Surface Green", score: "++" },
-    { strategy: "Centralized Subsurface Gray", score: "+" },
-  ],
-  "Water Quantity - Basement Backups": [
-    { strategy: "Decentralized Surface Green", score: "+" },
-    { strategy: "Decentralized Roof Top Green", score: "-" },
-    { strategy: "Decentralized Surface Gray", score: "+" },
-    { strategy: "Decentralized Subsurface Gray", score: "+" },
-    { strategy: "Centralized Surface Green", score: "--" },
-    { strategy: "Centralized Subsurface Gray", score: "-" },
-  ],
-  "Water Quantity - Scarcity/Supply": [
-    { strategy: "Decentralized Surface Green", score: "+" },
-    { strategy: "Decentralized Roof Top Green", score: "+" },
-    { strategy: "Decentralized Surface Gray", score: "+" },
-    { strategy: "Decentralized Subsurface Gray", score: "+" },
-    { strategy: "Centralized Surface Green", score: "+" },
-    { strategy: "Centralized Subsurface Gray", score: "+" },
-  ],
-  "Co-Benefits": [
-    { strategy: "Decentralized Surface Green", score: "++" },
-    { strategy: "Decentralized Roof Top Green", score: "+" },
-    { strategy: "Decentralized Surface Gray", score: "--" },
-    { strategy: "Decentralized Subsurface Gray", score: "--" },
-    { strategy: "Centralized Surface Green", score: "+" },
-    { strategy: "Centralized Subsurface Gray", score: "--" },
-  ],
-};
-
-
-
-let map = null;
-let slopeData = null;
-let populationData = null;
-let imperviousData = null;
-let buildingData = null;
-let bedrockData = null;
-let groundwaterData = null;
-let boundaryData = null;
-let rubricData = null; // Ensure rubricData is initialized
-
-  // Accordion Functionality: Show/Hide Input Sections
-  const accordionButtons = document.querySelectorAll('.accordion-btn');
-  accordionButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      const content = button.nextElementSibling;
-      content.style.display = content.style.display === 'block' ? 'none' : 'block';
+  function parseCSV(text) {
+    const [hdr,...lines] = text.trim().split(/\r?\n/);
+    const cols = hdr.split(',').map(c=>c.trim());
+    return lines.map(l=>{
+      const vals=l.split(',').map(v=>v.trim());
+      return cols.reduce((o,c,i)=>(o[c]=vals[i],o),{});
     });
-  });
+  }
+  function parseScore(s){return {'++':2,'+':1,'=':0,'-':-1,'--':-2}[s]||0;}
+  function evalThreshold(v,thr){
+    if(thr.includes('and <')){const [min,max]=thr.replace('>=','').split('and <').map(Number);return v>=min&&v<max;}
+    if(thr.startsWith('>=')) return v>=+thr.slice(2);
+    if(thr.startsWith('<'))  return v< +thr.slice(1);
+    return false;
+  }
 
-  // Event Listeners for File Uploads
-  document.getElementById('boundary-file').addEventListener('change', (e) => loadBoundaryFile(e.target.files[0]));
-  document.getElementById('terrain-file').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-          const geojson = JSON.parse(event.target.result); // Parse GeoJSON file
-          slopeData = geojson; // Assign to the global slopeData variable
-          const fields = extractFields(geojson); // Extract fields from GeoJSON
-          populateFieldDropdown(fields, 'slope-field-dropdown'); // Populate the dropdown
-          updateStatusMessage('Slope file loaded successfully!', 'green'); // Update status
-      };
-      reader.readAsText(file); // Read the file
-  });
-  document.getElementById('density-population').addEventListener('change', (e) => loadGeoJSONFile(e.target.files[0], 'population', 'population-field-dropdown'));
-  document.getElementById('density-impervious').addEventListener('change', (e) => loadGeoJSONFile(e.target.files[0], 'impervious', 'impervious-field-dropdown'));
-  document.getElementById('density-building').addEventListener('change', (e) => loadGeoJSONFile(e.target.files[0], 'building', 'building-field-dropdown'));
-  document.getElementById('subsurface-bedrock').addEventListener('change', (e) => loadGeoJSONFile(e.target.files[0], 'bedrock', 'bedrock-field-dropdown'));
-  document.getElementById('subsurface-groundwater').addEventListener('change', (e) => loadGeoJSONFile(e.target.files[0], 'groundwater', 'groundwater-field-dropdown'));
-  document.getElementById('rubric').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) {
-          updateStatusMessage("No rubric file selected!", "red");
-          return;
-      }
-      console.log("Rubric file selected:", file.name); // Debugging
-      loadScoringRubric(file);
-  });
-  document.addEventListener('change', (e) => {
-    if (e.target.type === 'checkbox' && e.target.dataset.driver) {
-      const driverName = e.target.dataset.driver;
-
-      // Ensure rubric and boundary data exist
-      if (!rubricData || !boundaryData) {
-        console.error("Rubric or boundary data is missing");
-        updateStatusMessage("Please ensure rubric and boundary files are uploaded", "red");
-        return;
-      }
-
-      const selectedNameField = document.getElementById('name-field-dropdown').value;
-      if (!selectedNameField) {
-        console.error("Name field is not selected");
-        updateStatusMessage("Please select a name field for boundaries", "red");
-        return;
-      }
-
-      // Update driver data for each boundary
-      boundaryData.features.forEach((feature) => {
-        const driverEntry = rubricData.find((row) => row.Driver === driverName);
-
-        if (driverEntry) {
-          const driverScore = parseScore(driverEntry.Score);
-          const driverStrategy = driverEntry.Strategy;
-
-          if (e.target.checked) {
-            // Add driver details to feature properties
-            initializeDrivers[driverName] = {
-              score: driverScore,
-              strategy: driverStrategy,
-            };
-          } else {
-            // Remove driver details if unchecked
-            delete initializeDrivers[driverName];
-          }
-        }
-      });
-
-      // Refresh the map with updated driver data
-      displayBoundaryOnMap(boundaryData, selectedNameField);
-      updateStatusMessage("Driver data updated on the map", "green");
-    }
-  });
-
-  document.getElementById('process-btn').addEventListener('click', processNeighborhoods);
-  // Function to Load Boundary GeoJSON File
-  function loadBoundaryFile(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      // Parse the GeoJSON file
-      boundaryData = JSON.parse(e.target.result);
-
-      // Populate the name field dropdown with fields from the GeoJSON file
-      const fields = extractFields(boundaryData);
-      populateFieldDropdown(fields, 'name-field-dropdown');
-
-      // Automatically select the first field if none is selected
-      const nameDropdown = document.getElementById('name-field-dropdown');
-      if (!nameDropdown.value) {
-        nameDropdown.value = fields[0]; // Select the first field by default
-      }
-
-      // Get the selected name field
-      const selectedNameField = nameDropdown.value;
-
-      if (!selectedNameField) {
-        updateStatusMessage('Please select a name field for boundaries!', 'red');
-        return;
-      }
-
-      // Display the boundaries on the map using the selected name field
-      displayBoundaryOnMap(boundaryData, selectedNameField);
-      updateStatusMessage('Boundary file loaded successfully!', 'green');
+  document.getElementById('geojsonInput').onchange = e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader(); r.onload=ev=>{geoData=JSON.parse(ev.target.result); updateStatus('GeoJSON loaded');};
+    r.readAsText(f);
+  };
+  document.getElementById('csvInput').onchange = e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader(); r.onload=ev=>{
+      rubric=parseCSV(ev.target.result);
+      driversList=[...new Set(rubric.filter(r=>r.Type==='Driver').map(r=>r.Driver))];
+      updateStatus('Rubric loaded');
     };
+    r.readAsText(f);
+  };
+  document.getElementById('processBtn').onclick = ()=>{
+    if(!geoData||!rubric) return updateStatus('Load files first',true);
+    computeSuitability(); renderTable(); renderMap(); updateStatus('Complete');
+  };
 
-    reader.readAsText(file);
-  }
+  const metrics=[
+    {key:'Slope',label:'Slope'},
+    {key:'POPDENS_CY',label:'Population Density'},
+    {key:'Impervious',label:'Percent Impervious'},
+    {key:'BuildingHeight',label:'Average Building Height'},
+    {key:'Bedrock',label:'Bedrock Depth'},
+    {key:'Groundwater',label:'Groundwater'}
+  ];
 
-  // Add event listener for name field dropdown
-  document.getElementById('name-field-dropdown').addEventListener('change', () => {
-    const selectedNameField = document.getElementById('name-field-dropdown').value;
+function computeSuitability() {
+  results = geoData.features.map(f => {
+    const p = f.properties;
+    const name = p.DIST_NAME;
 
-    if (!selectedNameField) {
-      updateStatusMessage('Please select a name field for boundaries!', 'red');
-      return;
-    }
+    // buckets for logging
+    const condScores = {};
+    const drvScores  = {};
+    const scores     = {};
+    const negs       = {};
+    const disq       = new Set();
 
-    // Refresh the map with the selected name field
-    displayBoundaryOnMap(boundaryData, selectedNameField);
-    updateStatusMessage('Map updated with selected name field!', 'green');
-  });
-
-  // Function to Load Other GeoJSON Files
-  function loadGeoJSONFile(file, type, dropdownId) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const data = JSON.parse(e.target.result);
-      switch (type) {
-        case 'slope':
-            slopeData = data;
-            populateFieldDropdown(extractFields(data), dropdownId); // Allow user to select the field
-            break;
-        case 'population': populationData = data; populateFieldDropdown(extractFields(data), dropdownId); break;
-        case 'impervious': imperviousData = data; populateFieldDropdown(extractFields(data), dropdownId); break;
-        case 'building': buildingData = data; populateFieldDropdown(extractFields(data), dropdownId); break;
-        case 'bedrock': bedrockData = data; populateFieldDropdown(extractFields(data), dropdownId); break;
-        case 'groundwater': groundwaterData = data; populateFieldDropdown(extractFields(data), dropdownId); break;
-      }
-      updateStatusMessage(`${type} file loaded successfully!`, 'green');
-    };
-    reader.readAsText(file);
-  }
-
-  // Function to Load Scoring Rubric CSV File
-  function loadScoringRubric(file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-          const rawData = e.target.result;
-          console.log("Raw rubric data (CSV):", rawData); // Debugging raw CSV content
-          rubricData = parseCSV(rawData);
-          console.log("Parsed rubric data:", rubricData); // Debug parsed data
-          updateStatusMessage('Scoring rubric loaded successfully!', 'green');
-      };
-      reader.readAsText(file);
-  }
-
-  console.log("Rubric Data (on startup):", rubricData || "Rubric not yet loaded.");
-
-  // Extract Fields from GeoJSON
-  function extractFields(geojson) {
-    if (!geojson || !geojson.features || geojson.features.length === 0) {
-      console.error('Invalid or empty GeoJSON data.');
-      return [];
-    }
-    return Object.keys(geojson.features[0].properties);
-  }
-
-  // Populate Dropdown with Fields
-  function populateFieldDropdown(fields, dropdownId) {
-    const dropdown = document.getElementById(dropdownId);
-    dropdown.innerHTML = '<option value="" disabled selected>Select a field</option>';
-    fields.forEach((field) => {
-      const option = document.createElement('option');
-      option.value = field;
-      option.textContent = field;
-      dropdown.appendChild(option);
+    console.group(`District: ${name}`);
+    console.log('--- Condition Contributions ---');
+    metrics.forEach(m => {
+      const v = +p[m.key] || 0;
+      rubric
+        .filter(r => r.Type==='Condition' && r.Subcategory===m.label && evalThreshold(v, r.Threshold))
+        .forEach(r => {
+          const sc = parseScore(r.Score);
+          condScores[r.Strategy] = (condScores[r.Strategy]||0) + sc;
+          scores   [r.Strategy] = (scores   [r.Strategy]||0) + sc;
+        });
     });
-  }
+    console.table(condScores);
 
-  // Parse CSV File
-  function parseCSV(data) {
-    const rows = data.trim().split(/\r?\n/).map((row) => row.split(','));
-    const headers = rows.shift();
-    return rows.map((row) => Object.fromEntries(row.map((val, i) => [headers[i], val.trim()])));
-  }
-
-  // Display Boundary Data on Map
-  function displayBoundaryOnMap(geojson, nameField) {
-      if (!map) {
-          map = L.map("map").setView([39.9526, -75.1652], 12); // Initialize map at Philadelphia
-          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
-      }
-
-      map.eachLayer((layer) => {
-          if (!layer._url) map.removeLayer(layer);
-      });
-
-      L.geoJSON(geojson, {
-          onEachFeature: (feature, layer) => {
-              layer.bindPopup(() => generatePopupContent(feature, nameField));
-
-              const label = L.divIcon({
-                  className: "boundary-label",
-                  html: `<span>${feature.properties[nameField] || "No Name"}</span>`,
-                  iconSize: [100, 40],
-              });
-
-              const center = turf.center(feature).geometry.coordinates;
-              L.marker([center[1], center[0]], { icon: label }).addTo(map);
-          },
-          style: {
-              color: "blue",
-              weight: 2,
-              fillOpacity: 0.3,
-          },
-      }).addTo(map);
-  }
-
-  function generatePopupContent(feature, nameField) {
-      const boundaryName = feature.properties[nameField] || "No Name";
-
-      const drivers = feature.properties.drivers || {};
-      const driverDetails = Object.entries(drivers)
-          .map(([driver, driverData]) => {
-              if (!driverStrategyScores[driver]) {
-                  return `<b>${driver}:</b> No strategies available`;
-              }
-
-              // Map through all strategies for the driver and display them
-              const strategies = driverStrategyScores[driver]
-                  .map(strategyObj => {
-                      return `Strategy: ${strategyObj.strategy}, <b>Score:</b> ${strategyObj.score}`;
-                  })
-                  .join("<br>");
-
-              return `<b>${driver}:</b><br>${strategies}`;
-          })
-          .join("<br><br>");
-
-      return `
-          <b>${boundaryName}</b><br>
-          ${driverDetails || "No drivers selected"}
-      `;
-  }
-
-
-
-  function matchThresholds(subcategory, value) {
-      if (!rubricData || rubricData.length === 0) {
-          console.error("Scoring rubric data is not loaded.");
-          return { strategy: "No Data", score: null };
-      }
-
-      console.log(`Evaluating thresholds for subcategory: ${subcategory}, value: ${value}`);
-      let bestScore = -Infinity;
-      let strategies = []; // To capture all strategies with the highest score
-
-      // Filter rubric rows by subcategory
-      const entries = rubricData.filter((row) => row.Subcategory.trim() === subcategory);
-      if (entries.length === 0) {
-          console.warn(`No matching rubric entries for subcategory: ${subcategory}`);
-          return { strategy: "No Data", score: null };
-      }
-
-      entries.forEach((entry) => {
-          const threshold = entry.Threshold.trim();
-          const strategy = entry.Strategy;
-          const score = parseScore(entry.Score.trim());
-
-          if (!threshold || isNaN(score)) {
-              console.warn(`Invalid entry: ${entry}`);
-              return;
-          }
-
-          console.log(`Checking threshold: ${threshold}, strategy: ${strategy}, score: ${score}`);
-
-          // Parse thresholds and compare value
-          if (threshold.includes(">=") && threshold.includes("<")) {
-              const [min, max] = threshold.replace(">=", "").split("and <").map(parseFloat);
-              if (value >= min && value < max) {
-                  if (score > bestScore) {
-                      bestScore = score;
-                      strategies = [strategy];
-                  } else if (score === bestScore) {
-                      strategies.push(strategy);
-                  }
-              }
-          } else if (threshold.includes(">=") && value >= parseFloat(threshold.replace(">=", ""))) {
-              if (score > bestScore) {
-                  bestScore = score;
-                  strategies = [strategy];
-              } else if (score === bestScore) {
-                  strategies.push(strategy);
-              }
-          } else if (threshold.includes("<") && value < parseFloat(threshold.replace("<", ""))) {
-              if (score > bestScore) {
-                  bestScore = score;
-                  strategies = [strategy];
-              } else if (score === bestScore) {
-                  strategies.push(strategy);
-              }
-          }
-      });
-
-      return {
-          strategy: strategies.length > 0 ? strategies.join(", ") : "No Data",
-          score: bestScore,
-      };
-  }
-
-  // Helper function to parse scores (++ = 2, + = 1, etc.)
-  function parseScore(score) {
-      const scoreMap = {
-          "++": 2,
-          "+": 1,
-          "=": 0,
-          "-": -1,
-          "--": -2
-      };
-      return scoreMap[score] ?? 0; // Default to 0 for unknown scores
-  }
-
-  function initializeDrivers(neighborhoodIndex) {
-      const feature = boundaryData.features[neighborhoodIndex];
-      if (!feature.properties.drivers) {
-          feature.properties.drivers = {};
-      }
-      return feature.properties.drivers;
-  }
-
-
-  function interpretScore(score) {
-      const scoreMap = {
-          2: "Highly Suitable",
-          1: "Suitable",
-          0: "Neutral",
-          "-1": "Less Suitable",
-          "-2": "Unsuitable"
-      };
-      return scoreMap[score] || "Unknown"; // Default to "Unknown" if the score is not in the map
-  }
-  // Process and Calculate Metrics for Neighborhoods
-  function processNeighborhoods() {
-    if (!rubricData) {
-    console.error("Rubric data is not loaded");
-    updateStatusMessage("Please upload the scoring rubric first!", "red");
-    return;
-}
-      const nameField = document.getElementById("name-field-dropdown").value;
-      const populationField = document.getElementById("population-field-dropdown").value;
-      const imperviousField = document.getElementById("impervious-field-dropdown").value;
-      const buildingField = document.getElementById("building-field-dropdown").value;
-      const bedrockField = document.getElementById("bedrock-field-dropdown").value;
-      const groundwaterField = document.getElementById("groundwater-field-dropdown").value;
-      const slopeField = document.getElementById('slope-field-dropdown').value;
-      // Get driver checkboxes
-      const driverCheckboxes = document.querySelectorAll("#driver-checkboxes input[type='checkbox']");
-
-      const results = boundaryData.features.map((neighborhood) => {
-          const name = neighborhood.properties[nameField];
-
-
-
-
-          // Calculate metrics for each condition subcategory
-          const avgSlope = calculateMetric(slopeData, neighborhood, slopeField);
-          const avgPopulation = calculateMetric(populationData, neighborhood, populationField);
-          const avgImpervious = calculateMetric(imperviousData, neighborhood, imperviousField);
-          const avgBuilding = calculateMetric(buildingData, neighborhood, buildingField);
-          const avgBedrock = calculateMetric(bedrockData, neighborhood, bedrockField);
-          const avgGroundwater = calculateMetric(groundwaterData, neighborhood, groundwaterField);
-
-          // Match thresholds for each condition
-          const slopeResult = matchThresholds("Slope", avgSlope);
-          const populationResult = matchThresholds("Population Density", avgPopulation);
-          const imperviousResult = matchThresholds("Impervious Surface", avgImpervious);
-          const buildingResult = matchThresholds("Building Height", avgBuilding);
-          const bedrockResult = matchThresholds("Bedrock Depth", avgBedrock);
-          const groundwaterResult = matchThresholds("Groundwater Depth", avgGroundwater);
-
-          // Initialize combined score, strategy, and suitability with condition scores
-          let combinedScore = slopeResult.score || 0;
-          let combinedStrategy = slopeResult.strategy || "No Data";
-          let combinedSuitability = interpretScore(combinedScore);
-
-          // Process selected drivers
-          driverCheckboxes.forEach((checkbox) => {
-              if (checkbox.checked) {
-                  const driverName = checkbox.getAttribute("data-driver");
-                  const driverEntry = rubricData.find(row => row.Driver === driverName);
-
-                  if (driverEntry) {
-                      const driverScore = parseScore(driverEntry.Score.trim());
-                      if (driverScore > combinedScore) {
-                          combinedScore = driverScore;
-                          combinedStrategy = driverEntry.Strategy;
-                          combinedSuitability = interpretScore(driverScore);
-                      }
-                  }
-              }
-          });
-
-          // Return the results for the neighborhood, combining both conditions and drivers
-          return {
-              neighborhood: name,
-              slope: {
-                  avg: avgSlope.toFixed(2),
-                  score: slopeResult.score || 0,
-                  strategy: slopeResult.strategy,
-                  suitability: interpretScore(slopeResult.score),
-              },
-              population: {
-                  avg: avgPopulation.toFixed(2),
-                  score: populationResult.score || 0,
-                  strategy: populationResult.strategy,
-                  suitability: interpretScore(populationResult.score),
-              },
-              impervious: {
-                  avg: avgImpervious.toFixed(2),
-                  score: imperviousResult.score || 0,
-                  strategy: imperviousResult.strategy,
-                  suitability: interpretScore(imperviousResult.score),
-              },
-              building: {
-                  avg: avgBuilding.toFixed(2),
-                  score: buildingResult.score || 0,
-                  strategy: buildingResult.strategy,
-                  suitability: interpretScore(buildingResult.score),
-              },
-              bedrock: {
-                  avg: avgBedrock.toFixed(2),
-                  score: bedrockResult.score || 0,
-                  strategy: bedrockResult.strategy,
-                  suitability: interpretScore(bedrockResult.score),
-              },
-              groundwater: {
-                  avg: avgGroundwater.toFixed(2),
-                  score: groundwaterResult.score || 0,
-                  strategy: groundwaterResult.strategy,
-                  suitability: interpretScore(groundwaterResult.score),
-              },
-              drivers: {
-                  score: combinedScore,
-                  strategy: combinedStrategy,
-                  suitability: combinedSuitability,
-              }
-          };
-      });
-
-      // Update the table and map with the results
-      updateResultsTable(results);
-      displayResultsOnMap(results);
-      updateStatusMessage("Results successfully processed with conditions and drivers!", "green");
-  }
-
-  // Calculate Metric for Features within a Neighborhood
-  function calculateMetric(data, neighborhood, field) {
-    if (!data || !field) return 0;
-
-    let total = 0;
-    let count = 0;
-
-    data.features.forEach((feature) => {
-      const geomType = feature.geometry.type;
-
-      if (geomType === "Point") {
-        // For Points, check if they fall within the neighborhood polygon
-        if (turf.booleanPointInPolygon(feature, neighborhood)) {
-          total += feature.properties[field] || 0;
-          count++;
-        }
-      } else if (geomType === "LineString" || geomType === "MultiLineString") {
-        // For Lines, calculate intersecting length and weight the property
-        const intersection = turf.lineIntersect(feature, neighborhood);
-        if (intersection.features.length > 0) {
-          total += feature.properties[field] || 0;
-          count++;
-        }
-      } else if (geomType === "Polygon" || geomType === "MultiPolygon") {
-        // For Polygons, calculate area-weighted contribution
-        const intersection = turf.intersect(feature, neighborhood);
-        if (intersection) {
-          const areaRatio = turf.area(intersection) / turf.area(feature);
-          total += (feature.properties[field] || 0) * areaRatio;
-          count++;
-        }
-      }
+    console.log('--- Driver Contributions ---');
+    (selectedDrivers[name]||[]).forEach(drv => {
+      rubric
+        .filter(r => r.Type==='Driver' && r.Driver===drv)
+        .forEach(r => {
+          const sc = parseScore(r.Score);
+          drvScores[r.Strategy] = (drvScores[r.Strategy]||0) + sc;
+          scores   [r.Strategy] = (scores   [r.Strategy]||0) + sc;
+        });
     });
+    console.table(drvScores);
 
-    return count > 0 ? total / count : 0;
-  }
+    console.log('--- Total Strategy Scores ---');
+    console.table(scores);
 
+    // find the top score
+    const maxScore = Math.max(...Object.values(scores), 0);
+    // collect all strategies that hit it
+    const bestStrategies = Object
+      .entries(scores)
+      .filter(([, sc]) => sc === maxScore)
+      .map(([s]) => s);
 
-  function calculateOverallSuitability(neighborhoodRows) {
-    let totalScore = 0;
-    let count = 0;
-
-    neighborhoodRows.forEach((row) => {
-      const adjustedScore = parseFloat(row.querySelector(".adjusted-score").textContent);
-      if (!isNaN(adjustedScore)) {
-        totalScore += adjustedScore;
-        count++;
-      }
-    });
-
-    const averageScore = totalScore / count;
-    return interpretAdjustedScore(averageScore); // Use the interpretation function
-  }
-
-  function updateNeighborhoodSuitability() {
-    const neighborhoodSections = document.querySelectorAll('td[colspan="8"]');
-    neighborhoodSections.forEach((section) => {
-      const neighborhoodName = section.textContent.trim();
-      const neighborhoodRows = [];
-      let currentRow = section.nextElementSibling;
-
-      // Collect all rows until the next neighborhood header
-      while (currentRow && !currentRow.querySelector('td[colspan="8"]')) {
-        neighborhoodRows.push(currentRow);
-        currentRow = currentRow.nextElementSibling;
-      }
-
-      const overallSuitability = calculateOverallSuitability(neighborhoodRows);
-      section.textContent = `${neighborhoodName} (Overall: ${overallSuitability})`;
-    });
-  }
-
-  function evaluateStrategies(subcategory, value) {
-    const thresholds = rubricData.filter(row => row.Subcategory === subcategory);
-    const strategyScores = [];
-
-    thresholds.forEach(threshold => {
-      const min = parseFloat(threshold.Min);
-      const max = parseFloat(threshold.Max);
-      const strategy = threshold.Strategy;
-      const score = threshold.Score;
-
-      if (!isNaN(min) && !isNaN(max)) {
-        if (value >= min && value <= max) {
-          strategyScores.push({ strategy, score });
-        }
-      } else if (!isNaN(min) && value >= min) {
-        strategyScores.push({ strategy, score });
-      } else if (!isNaN(max) && value <= max) {
-        strategyScores.push({ strategy, score });
-      }
-    });
-
-    return strategyScores;
-  }
-  function updateResultsTable(results) {
-      const tbody = document.querySelector("#results-table tbody");
-      tbody.innerHTML = ""; // Clear existing rows
-
-      results.forEach((res, neighborhoodIndex) => {
-          // Add neighborhood header row
-          const boundaryRow = document.createElement("tr");
-          boundaryRow.innerHTML = `<td colspan="7" class="neighborhood-header"><strong>${res.neighborhood}</strong></td>`;
-          tbody.appendChild(boundaryRow);
-
-          // Add rows for each subcategory (conditions like slope, population, etc.)
-          categories.forEach((category) => {
-              category.subcategories.forEach((subcat) => {
-                  const metric = res[subcat];
-                  if (!metric) return; // Skip if no data for subcategory
-
-                  const row = document.createElement("tr");
-                  row.innerHTML = `
-                      <td></td>
-                      <td>${category.name}</td>
-                      <td>${subcat.charAt(0).toUpperCase() + subcat.slice(1)}</td>
-                      <td>${isNaN(metric.avg) ? "0.00" : metric.avg}</td>
-                      <td>${metric.score || "0"}</td>
-                      <td>${metric.strategy || "No Data"}</td>
-                      <td>${metric.suitability || "Unknown"}</td>
-                  `;
-                  tbody.appendChild(row);
-              });
-          });
-
-          // Add driver selection row
-          const driverRow = document.createElement("tr");
-          driverRow.innerHTML = `
-              <td></td>
-              <td>Driver</td>
-              <td colspan="5">
-                  ${generateDriverCheckboxes(neighborhoodIndex)}
-              </td>
-          `;
-          tbody.appendChild(driverRow);
-      });
-
-      attachDriverCheckboxListeners(results);
-  }
-
-  function generateDriverCheckboxes(neighborhoodIndex) {
-    return drivers
-      .map((driver) => {
-        return `
-          <label>
-            <input type="checkbox" data-neighborhood-index="${neighborhoodIndex}" data-driver="${driver}">
-            ${driver}
-          </label>
-        `;
-      })
-      .join("<br>");
-  }
-
-  function updateDriverData(neighborhoodIndex, driverName, isChecked) {
-      const feature = boundaryData.features[neighborhoodIndex];
-      const drivers = initializeDrivers(neighborhoodIndex);
-
-      const driverEntry = rubricData.find((row) => row.Driver === driverName);
-      if (!driverEntry) {
-          console.warn(`Driver entry for '${driverName}' not found`);
-          return;
-      }
-
-      const driverScore = parseScore(driverEntry.Score.trim());
-      const driverStrategy = driverEntry.Strategy;
-
-      if (isChecked) {
-          drivers[driverName] = { score: driverScore, strategy: driverStrategy };
-      } else {
-          delete drivers[driverName];
-      }
-  }
-
-
-  function attachDriverCheckboxListeners() {
-      const driverCheckboxes = document.querySelectorAll("#results-table input[type='checkbox']");
-      driverCheckboxes.forEach((checkbox) => {
-          checkbox.addEventListener("change", () => {
-              const neighborhoodIndex = parseInt(checkbox.dataset.neighborhoodIndex, 10);
-              const driverName = checkbox.dataset.driver;
-
-              if (!boundaryData || !boundaryData.features[neighborhoodIndex]) {
-                  console.error("Invalid neighborhood index or boundary data");
-                  return;
-              }
-
-              const feature = boundaryData.features[neighborhoodIndex];
-              const drivers = initializeDrivers(neighborhoodIndex);
-
-              if (checkbox.checked) {
-                  // Fetch driver strategy and score
-                  const driverEntry = driverStrategyScores[driverName]?.find((entry) => entry.strategy);
-                  if (driverEntry) {
-                      drivers[driverName] = {
-                          score: driverEntry.score,
-                          strategy: driverEntry.strategy,
-                      };
-                  } else {
-                      console.warn(`Driver entry not found for '${driverName}'`);
-                  }
-              } else {
-                  delete drivers[driverName];
-              }
-
-              // Update the map popup dynamically
-              refreshMap();
-          });
-      });
-  }
-
-
-function recalculateCombinedScores(neighborhoodIndex, results) {
-    const neighborhood = results[neighborhoodIndex];
-    let maxScore = 0;
-    let maxStrategy = "No Data";
-
-    const driverCheckboxes = document.querySelectorAll(
-        `#results-table input[type='checkbox'][data-neighborhood-index='${neighborhoodIndex}']:checked`
+    console.log(
+      `Best Strategy${bestStrategies.length>1?'ies':'y'}: ` +
+      `${bestStrategies.join(', ')} (${maxScore})`
     );
+    console.groupEnd();
 
-    driverCheckboxes.forEach((checkbox) => {
-        const driverName = checkbox.dataset.driver;
-        const driverEntry = rubricData.find((row) => row.Driver === driverName);
-
-        if (driverEntry) {
-            const driverScore = parseScore(driverEntry.Score.trim());
-            if (driverScore > maxScore) {
-                maxScore = driverScore;
-                maxStrategy = driverEntry.Strategy;
-            }
-        }
-    });
-
-    neighborhood.drivers.score = maxScore;
-    neighborhood.drivers.strategy = maxStrategy;
-    neighborhood.drivers.suitability = interpretScore(maxScore);
+    return {
+      name,
+      score:    maxScore,
+      strategy: bestStrategies,   // array of all tied strategies
+      scores
+    };
+  });
 }
 
-  function updateSuitability(row, adjustedScore) {
-      const suitabilityCell = row.querySelector("td:nth-child(6)");
-      if (!suitabilityCell) return;
 
-      const updatedSuitability = interpretAdjustedScore(adjustedScore);
-      suitabilityCell.textContent = updatedSuitability;
-  }
 
-  function addWeightInputListeners() {
-      const weightInputs = document.querySelectorAll(".weight-input");
-      weightInputs.forEach((input) => {
-          input.addEventListener("input", function () {
-              // Parse the weight entered by the user
-              let weight = parseFloat(this.value);
-              if (isNaN(weight) || weight <= 0) {
-                  console.warn("Invalid weight entered. Defaulting to 1.0.");
-                  weight = 1.0;
-                  this.value = weight; // Reset invalid input to default
-              }
-
-              // Locate the row containing this weight input
-              const row = this.closest("tr");
-
-              // Find cells in the row
-              const suitabilityCell = row.querySelector("td:nth-child(6)"); // Adjust index if needed
-              const adjustedScoreCell = row.querySelector(".adjusted-score");
-
-              // Ensure required cells are present
-              if (!suitabilityCell || !adjustedScoreCell) {
-                  console.error("Error: Missing suitability or adjusted score cell in row:", row);
-                  return;
-              }
-
-              // Parse the base suitability score from the cell
-              const baseSuitability = suitabilityCell.textContent.trim();
-              const baseScore = parseScore(baseSuitability);
-
-              if (isNaN(baseScore)) {
-                  console.error("Error: Invalid base score parsed:", baseSuitability);
-                  adjustedScoreCell.textContent = "0.00"; // Default adjusted score to 0
-                  suitabilityCell.textContent = "Unknown"; // Set unknown suitability
-                  return;
-              }
-
-              // Calculate the adjusted score
-              const adjustedScore = baseScore * weight;
-
-              // Update the adjusted score in the table
-              adjustedScoreCell.textContent = adjustedScore.toFixed(2);
-
-              // Recalculate suitability based on adjusted score
-              const updatedSuitability = interpretScore(Math.round(adjustedScore));
-              suitabilityCell.textContent = updatedSuitability;
-
-              // Debugging logs
-              console.log("Weight Adjustment Event Triggered:");
-              console.log(`  Base Suitability: ${baseSuitability}`);
-              console.log(`  Parsed Base Score: ${baseScore}`);
-              console.log(`  Entered Weight: ${weight}`);
-              console.log(`  Calculated Adjusted Score: ${adjustedScore}`);
-              console.log(`  Updated Suitability: ${updatedSuitability}`);
-          });
+  function renderTable(){
+    const tbody=document.querySelector('#resultsTable tbody'); tbody.innerHTML='';
+    results.forEach(r=>{
+      const tr=document.createElement('tr');
+      // strategy scores
+      const innerRows=Object.entries(r.scores).map(([s,v])=>`<tr><td>${s}</td><td>${v}</td></tr>`).join('');
+      tr.innerHTML=`
+        <td>${r.name}</td>
+        <td>
+          <table class="inner-table">
+            <thead><tr><th>Strategy</th><th>Score</th></tr></thead>
+            <tbody>${innerRows}</tbody>
+          </table>
+        </td>
+        <td><div class="driver-checkboxes" data-district="${r.name}"></div></td>
+      `;
+      tbody.appendChild(tr);
+      // group drivers
+      const groups={};
+      driversList.forEach(d=>{
+        const [grp, ...rest] = d.split(' - ');
+        if(!groups[grp]) groups[grp]=[];
+        groups[grp].push(d);
       });
+      const box=tr.querySelector('.driver-checkboxes');
+      Object.entries(groups).forEach(([grp, items])=>{
+        const div=document.createElement('div'); div.className='driver-group';
+        div.innerHTML=`<h4>${grp}</h4>`;
+        items.forEach(d=>{
+          const ck=(selectedDrivers[r.name]||[]).includes(d)?'checked':'';
+          const lbl=document.createElement('label');
+          lbl.innerHTML=`<input type="checkbox" data-district="${r.name}" data-driver="${d}" ${ck}> ${d.split(' - ').slice(1).join(' - ')}`;
+          div.appendChild(lbl);
+        });
+        box.appendChild(div);
+      });
+    });
+    document.querySelectorAll('.driver-checkboxes input').forEach(cb=>{
+      cb.onchange=e=>{
+        const n=e.target.dataset.district;
+        selectedDrivers[n]=Array.from(
+          document.querySelectorAll(`.driver-checkboxes[data-district="${n}"] input:checked`)
+        ).map(el=>el.dataset.driver);
+        computeSuitability(); renderTable(); renderMap();
+      };
+    });
   }
 
-
-  updateNeighborhoodSuitability();
-
-  function interpretAdjustedScore(score) {
-      if (isNaN(score)) return "Neutral"; // Default to Neutral for invalid scores
-      if (score > 1.5) return "Highly Suitable";
-      if (score > 0.5) return "Suitable";
-      if (score >= -0.5) return "Neutral";
-      if (score >= -1.5) return "Less Suitable";
-      return "Unsuitable";
-  }
-
-  // Display Results on Map
-  function displayResultsOnMap(results) {
-    L.geoJSON(boundaryData, {
-      onEachFeature: (feature, layer) => {
-        const res = results.find((r) => r.neighborhood === feature.properties.NAME);
-        if (res) {
-          const popupContent = `
-            <b>${res.neighborhood}</b><br>
-            <b>Slope:</b> ${res.slope.avg} (${res.slope.suitability})<br>
-            <b>Population Density:</b> ${res.population.avg} (${res.population.suitability})<br>
-            <b>Impervious Surface:</b> ${res.impervious.avg} (${res.impervious.suitability})<br>
-            <b>Building Height:</b> ${res.building.avg} (${res.building.suitability})<br>
-            <b>Bedrock Depth:</b> ${res.bedrock.avg} (${res.bedrock.suitability})<br>
-            <b>Groundwater Depth:</b> ${res.groundwater.avg} (${res.groundwater.suitability})
-          `;
-          layer.bindPopup(popupContent);
-        }
-      },
-    }).addTo(map);
-  }
-
-  function refreshMap() {
-      const selectedNameField = document.getElementById("name-field-dropdown").value;
-
-      if (!selectedNameField) {
-          console.error("No name field selected for boundaries");
-          return;
-      }
-
-      // Redisplay boundaries and update the map
-      displayBoundaryOnMap(boundaryData, selectedNameField);
-  }
-
-
-  // Update Status Message
-  function updateStatusMessage(message, color) {
-    const statusMessage = document.getElementById('status-message');
-    statusMessage.textContent = message;
-    statusMessage.style.color = color;
-
-    // Clear the warning message if a valid update occurs
-    if (color === 'green') {
-      setTimeout(() => {
-        statusMessage.textContent = ''; // Clear message after success
-      }, 3000);
+  let map,layer;
+  function renderMap(){
+    if(!map){map=L.map('map').setView([39.95,-75.17],12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
     }
+    if(layer) map.removeLayer(layer);
+    layer=L.geoJSON(geoData,{style:f=>{
+      const r=results.find(x=>x.name===f.properties.DIST_NAME)||{};
+      const s=r.score;
+      return{color:'#555',fillColor:s>1?'#006400':s>0?'#228B22':s===0?'#999999':s>-2?'#FFA07A':'#FF0000',weight:1,fillOpacity:0.6};
+    },onEachFeature:(f,ly)=>{const r=results.find(x=>x.name===f.properties.DIST_NAME)||{};
+      ly.bindPopup(
+  `<b>${r.name}</b><br>`+
+  `Score: ${r.score}<br>`+
+  `<em>Best Strateg${r.strategy.length>1?'ies':'y'}:</em> ${r.strategy.join(', ')}`
+);
+
+    }}).addTo(map);
   }
 
-
-  document.getElementById("export-btn").addEventListener("click", exportTableToCSV);
-
-  function exportTableToCSV() {
-      const rows = document.querySelectorAll("#results-table tr");
-      let csvContent = "";
-
-      rows.forEach((row) => {
-          const cells = row.querySelectorAll("th, td");
-          const rowContent = Array.from(cells)
-              .map((cell) => cell.textContent.trim())
-              .join(",");
-          csvContent += rowContent + "\n";
-      });
-
-      // Create a download link for the CSV
-      const blob = new Blob([csvContent], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "results.csv";
-      a.click();
-      URL.revokeObjectURL(url);
-  }
-
-</script>
+  function updateStatus(msg,err=false){const d=document.getElementById('status');d.textContent=msg;d.style.color=err?'red':'green';}
+  </script>
 </body>
 </html>

@@ -5,8 +5,7 @@ https://mckeont.github.io/GIS-MCDA-5131/
 
 Open application (Index.html)
 
-Use Planning_Districts.geojson as the boundary layer
+Use Philly_5131.geojson as the boundary and data layer
 
-Use WetWeather_data.geojson for all conditions except Population
 
-Use Population_Philly.geojson for population data. 
+Use scoring_matrix_5131.csv 

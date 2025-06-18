@@ -105,68 +105,81 @@
 
 function computeSuitability() {
   results = geoData.features.map(f => {
-    const p = f.properties;
+    const p    = f.properties;
     const name = p.DIST_NAME;
 
-    // buckets for logging
-    const condScores = {};
-    const drvScores  = {};
-    const scores     = {};
-    const negs       = {};
-    const disq       = new Set();
+    // 1) Build up condition scores, driver scores, and total scores
+    const condScores  = {};
+    const drvScores   = {};
+    const totalScores = {};
 
-    console.group(`District: ${name}`);
-    console.log('--- Condition Contributions ---');
+    // a) Condition logic
     metrics.forEach(m => {
       const v = +p[m.key] || 0;
       rubric
-        .filter(r => r.Type==='Condition' && r.Subcategory===m.label && evalThreshold(v, r.Threshold))
+        .filter(r =>
+          r.Type === 'Condition' &&
+          r.Subcategory === m.label &&
+          evalThreshold(v, r.Threshold)
+        )
         .forEach(r => {
           const sc = parseScore(r.Score);
-          condScores[r.Strategy] = (condScores[r.Strategy]||0) + sc;
-          scores   [r.Strategy] = (scores   [r.Strategy]||0) + sc;
+          condScores  [r.Strategy] = (condScores  [r.Strategy] || 0) + sc;
+          totalScores [r.Strategy] = (totalScores [r.Strategy] || 0) + sc;
         });
     });
-    console.table(condScores);
 
-    console.log('--- Driver Contributions ---');
-    (selectedDrivers[name]||[]).forEach(drv => {
+    // b) Driver logic
+    (selectedDrivers[name] || []).forEach(drv => {
       rubric
-        .filter(r => r.Type==='Driver' && r.Driver===drv)
+        .filter(r =>
+          r.Type === 'Driver' &&
+          r.Driver === drv
+        )
         .forEach(r => {
           const sc = parseScore(r.Score);
-          drvScores[r.Strategy] = (drvScores[r.Strategy]||0) + sc;
-          scores   [r.Strategy] = (scores   [r.Strategy]||0) + sc;
+          drvScores    [r.Strategy] = (drvScores    [r.Strategy] || 0) + sc;
+          totalScores  [r.Strategy] = (totalScores  [r.Strategy] || 0) + sc;
         });
     });
-    console.table(drvScores);
 
-    console.log('--- Total Strategy Scores ---');
-    console.table(scores);
-
-    // find the top score
-    const maxScore = Math.max(...Object.values(scores), 0);
-    // collect all strategies that hit it
-    const bestStrategies = Object
-      .entries(scores)
-      .filter(([, sc]) => sc === maxScore)
+    // 2) Original v1 console.log audit trail
+    console.group(`🗺 ${name}`);
+    metrics.forEach(m => {
+      const val     = +p[m.key] || 0;
+      const matches = rubric.filter(r =>
+        r.Subcategory === m.label &&
+        evalThreshold(val, r.Threshold)
+      );
+      if (matches.length) {
+        console.group(`🔹 ${m.label} = ${val.toFixed(2)}`);
+        matches.forEach(r => {
+          const sc = parseScore(r.Score);
+          console.log(`✓ ${r.Threshold} → ${r.Strategy} (${sc >= 0 ? '+'+sc : sc})`);
+        });
+        console.groupEnd();
+      } else {
+        console.log(`— ${m.label} = ${val.toFixed(2)}: no thresholds matched`);
+      }
+    });
+    console.log('🏁 Totals by Strategy:');
+    console.table(totalScores);
+    const maxScore   = Math.max(...Object.values(totalScores), 0);
+    const bestStrats = Object.entries(totalScores)
+      .filter(([, s]) => s === maxScore)
       .map(([s]) => s);
-
-    console.log(
-      `Best Strategy${bestStrategies.length>1?'ies':'y'}: ` +
-      `${bestStrategies.join(', ')} (${maxScore})`
-    );
+    console.log(`🏆 Best: ${bestStrats.join(', ')} (Score: ${maxScore})`);
     console.groupEnd();
 
+    // 3) Return the result object
     return {
       name,
       score:    maxScore,
-      strategy: bestStrategies,   // array of all tied strategies
-      scores
+      strategy: bestStrats,
+      scores:   totalScores
     };
   });
 }
-
 
 
   function renderTable(){

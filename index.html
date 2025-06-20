@@ -7,6 +7,22 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <style>
     body { font-family: Arial, sans-serif; margin:0; padding:0; }
+	  #mainTabs {                             
+      display: flex;                         
+      background: #eee;                      
+      border-bottom: 1px solid #ccc;        
+    }                                        
+    #mainTabs button {                       
+      flex: 1;                              
+      padding: 0.5em;                       
+      border: none;                         
+      background: #eee;                     
+      cursor: pointer;                      
+    }                                        
+    #mainTabs button.active {                
+      background: #fff;                      
+      border-bottom: 2px solid #007bff;     
+    }       
     #controls { padding: 1em; background:#f8f8f8; }
     #map { height: 400px; }
     table { width:100%; border-collapse:collapse; margin-top:1em; }
@@ -28,33 +44,124 @@
     .driver-group h4 { margin:4px 0; font-size:0.9em; }
     .driver-group label { display:block; margin-left:8px; }
     #status { margin-top:.5em; height:1em; color: green; }
+	    #legend {                                
+      position: absolute;                    
+      bottom: 1em;                           
+      right: 1em;                            
+      background: rgba(255,255,255,0.9);     
+      padding: 0.5em;                        
+      font-size: 0.8em;                      
+      border: 1px solid #ccc;               
+      border-radius: 4px;   
+	  z-index: 1000; 	  
+    }                                        
+    #legend .swatch {                       
+      display: inline-block;                
+      width: 12px; height: 12px;            
+      margin-right: 4px;                    
+      vertical-align: middle;               
+    }                                        
+    .swatch.positive2 { background: #1a3c72; } 
+    .swatch.positive1 { background: #4e6fb1; } 
+    .swatch.zero      { background: #dddddd; } 
+    .swatch.negative1 { background: #f28e2c; } 
+	.swatch.negative2 { background: #b2182b; }
+	
+	.tab-content {
+  display: none;      
+  padding: 1em;      
+}
+
+#tab-map {
+  display: block;    
+}
+
   </style>
 </head>
 <body>
-  <div id="controls">
-    <h2>1. Load Planning Districts GeoJSON</h2>
-    <input type="file" id="geojsonInput" accept=".geojson"/>
-    <h2>2. Load Scoring Rubric CSV</h2>
-    <input type="file" id="csvInput" accept=".csv"/>
-    <button id="processBtn">Run Suitability Calculator</button>
-    <div id="status"></div>
-  </div>
+  <nav id="mainTabs">                             
+    <button data-tab="map">Map &amp; Results</button>         
+    <button data-tab="definitions">Definitions</button>
+    <button data-tab="methodology">Methodology</button>
+  </nav> 
+<section id="tab-map" class="tab-content">    
+<div id="controls">
+  <h2 title="Upload a GeoJSON with your district boundaries">Step 1: Load Map</h2>
+  <p>Add a GeoJSON file with your planning-district boundaries.</p>
+  <input type="file" id="geojsonInput" accept=".geojson"
+  title="Upload a GeoJSON with your district boundaries"/> 
 
-  <div id="map"></div>
+  <h2 title="Upload a CSV with columns: Type, Subcategory, Threshold, Strategy, Score, Driver">Step 2: Load Scoring Rubric</h2> 
+  <p>Add your own CSV here. (Or use our default rubric from the link below.)</p>
+  <input type="file" id="csvInput" accept=".csv"
+              title="Upload a CSV with columns: Type, Subcategory, Threshold, Strategy, Score, Driver"/>
+  <p><a href="path/to/default_rubric.csv" target="_blank">Download our modifiable rubric</a></p>
 
-  <table id="resultsTable">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Strategy Scores</th>
-        <th style="width:220px;">Drivers</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <h2 title="Run the suitability calculation across all districts">Step 3: Run Suitability Calculation</h2>
+  <p>Click the button to compute and map your scores.</p>
+  <button id="processBtn">Run Calculation</button>
+  <div id="status"></div>
+</div>
+
+
+   <div id="map" style="position:relative;"> 
+         <div id="legend">                             
+        <div><span class="swatch positive2"></span> +2 Must Have</div>
+        <div><span class="swatch positive1"></span> +1 Very Suitable</div>
+        <div><span class="swatch zero"></span> 0 Neutral</div>
+        <div><span class="swatch negative1"></span> -1 Marginal</div>
+        <div><span class="swatch negative2"></span> -2 Deal Breaker</div>
+      </div>                                       
+    </div>
+    <table id="resultsTable">
+      <thead>
+        <tr><th>Name</th><th>Strategy Scores</th><th style="width:220px;">Drivers</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>      
+
+ 
+  
+    <section id="tab-definitions" class="tab-content" style="display:none">
+    <h3>How Scores Work</h3>
+    <p><strong>Base Score</strong> uses only the six geographic metrics (slope, pop density, impervious, etc.).</p>
+    <p><strong>Driver Adjustments</strong> are optional system-drivers you check in the Drivers panel; each adds to the Base Score.</p>
+    <h3>Co-Benefits</h3>
+    <ul>
+      <li><strong>+2 (“Must Have”)</strong>: Critical system benefit</li>
+      <li><strong>+1 (“Very Suitable”)</strong>: Strongly beneficial</li>
+      <li><strong>0 (“Neutral”)</strong>: Neither for nor against</li>
+      <li><strong>−1 (“Marginal”)</strong>: Minor drawbacks</li>
+      <li><strong>−2 (“Deal Breaker”)</strong>: Unsuitable</li>
+    </ul>
+  </section>  
+    <section id="tab-methodology" class="tab-content" style="display:none"> 
+    <a href="path/to/methodology.pdf" target="_blank">Download full methodology</a>
+  </section>        
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+  <script>
+// ─── TAB-SWITCHER (add this) ────────────────────────────────────────────────
+document.querySelectorAll('#mainTabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    // 1) hide all tab‐content panes
+    document.querySelectorAll('.tab-content')
+      .forEach(sec => sec.style.display = 'none');
+    // 2) un‐highlight all buttons
+    document.querySelectorAll('#mainTabs button')
+      .forEach(b => b.classList.remove('active'));
+    // 3) show the clicked pane + highlight its tab
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab)
+      .style.display = 'block';
+  });
+});
+// default on load to Map & Results
+document.querySelector('#mainTabs button[data-tab="map"]').click();
+// ─────────────────────────────────────────────────────────────────────────────
+</script>
   <script>
   let geoData=null, rubric=null, results=[], driversList=[];
   let selectedDrivers={};
@@ -102,6 +209,7 @@
     {key:'Bedrock',label:'Bedrock Depth'},
     {key:'Groundwater',label:'Groundwater'}
   ];
+  
 
 function computeSuitability() {
   results = geoData.features.map(f => {
@@ -239,7 +347,18 @@ function computeSuitability() {
     layer=L.geoJSON(geoData,{style:f=>{
       const r=results.find(x=>x.name===f.properties.DIST_NAME)||{};
       const s=r.score;
-      return{color:'#555',fillColor:s>1?'#006400':s>0?'#228B22':s===0?'#999999':s>-2?'#FFA07A':'#FF0000',weight:1,fillOpacity:0.6};
+return {
+  color: '#555',
+  fillColor: (
+    s >= 2 ? '#1a3c72' :  // +2 Must Have
+    s === 1 ? '#4e6fb1' : // +1 Very Suitable
+    s === 0 ? '#dddddd' : //  0 Neutral
+    s === -1 ? '#f28e2c' : // -1 Marginal
+              '#b2182b'   // -2 Deal Breaker
+  ),
+  weight: 1,
+  fillOpacity: 0.6
+};
     },onEachFeature:(f,ly)=>{const r=results.find(x=>x.name===f.properties.DIST_NAME)||{};
       ly.bindPopup(
   `<b>${r.name}</b><br>`+

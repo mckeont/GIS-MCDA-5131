@@ -96,14 +96,11 @@
   <input type="file" id="csvInput" accept=".csv"
               title="Upload a CSV with columns: Type, Subcategory, Threshold, Strategy, Score, Driver"/>
   <p><a href="path/to/default_rubric.csv" target="_blank">Download our modifiable rubric</a></p>
-
   <h2 title="Run the suitability calculation across all districts">Step 3: Run Suitability Calculation</h2>
   <p>Click the button to compute and map your scores.</p>
   <button id="processBtn">Run Calculation</button>
   <div id="status"></div>
 </div>
-
-
    <div id="map" style="position:relative;"> 
          <div id="legend">                             
         <div><span class="swatch positive2"></span> ≥+2 Must Have</div>
@@ -120,9 +117,6 @@
       <tbody></tbody>
     </table>
   </section>      
-
- 
-  
     <section id="tab-definitions" class="tab-content" style="display:none">
     <h3>How Scores Work</h3>
     <p><strong>Base Score</strong> uses only the six geographic metrics (slope, pop density, impervious, etc.).</p>
@@ -135,7 +129,6 @@
       <li><strong>−1 (“Marginal”)</strong>: Minor drawbacks</li>
       <li><strong>−2 (“Deal Breaker”)</strong>: Unsuitable</li>
     </ul>
-	
 	<h3>Debug / Calculation Log</h3>
 <pre id="console-log" style="height:200px; overflow:auto; background:#f5f5f5; padding:8px;"></pre>
 
@@ -143,11 +136,9 @@
     <section id="tab-methodology" class="tab-content" style="display:none"> 
     <a href="path/to/methodology.pdf" target="_blank">Download full methodology</a>
   </section>        
-
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
   <script>
-// ─── TAB-SWITCHER (add this) ────────────────────────────────────────────────
 document.querySelectorAll('#mainTabs button').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-content').forEach(sec => sec.style.display = 'none');
@@ -157,8 +148,6 @@ document.querySelectorAll('#mainTabs button').forEach(btn => {
   });
 });
 document.querySelector('#mainTabs button[data-tab="map"]').click();
-
-// ─── HIJACK console.* FOR YOUR LOG PANEL ───────────────────────────────────
 let _logs = [];
 const _origGroup    = console.group.bind(console),
       _origGroupEnd = console.groupEnd.bind(console),
@@ -167,11 +156,11 @@ const _origGroup    = console.group.bind(console),
 
 console.group = (...args) => {
   _origGroup(...args);
-  _logs.push(args.join(' '));             // e.g. "🗺 DistrictName"
+  _logs.push(args.join(' '));             
 };
 console.log = (...args) => {
   _origLog(...args);
-  _logs.push('  ' + args.join(' '));      // indent your ✓ lines
+  _logs.push('  ' + args.join(' ')); 
 };
 console.table = (data) => {
   _origTable(data);
@@ -181,8 +170,6 @@ console.table = (data) => {
   });
 };
 console.groupEnd = () => _origGroupEnd();
-
-// push the contents into your <pre id="console-log">
 function updateLogPanel() {
   const el = document.getElementById('console-log');
   if (!el) return;
@@ -242,13 +229,9 @@ function computeSuitability() {
   results = geoData.features.map(f => {
     const p    = f.properties;
     const name = p.DIST_NAME;
-
-    // 1) Build up condition scores, driver scores, and total scores
     const condScores  = {};
     const drvScores   = {};
     const totalScores = {};
-
-    // a) Condition logic
     metrics.forEach(m => {
       const v = +p[m.key] || 0;
       rubric
@@ -263,8 +246,6 @@ function computeSuitability() {
           totalScores [r.Strategy] = (totalScores [r.Strategy] || 0) + sc;
         });
     });
-
-    // b) Driver logic
     (selectedDrivers[name] || []).forEach(drv => {
       rubric
         .filter(r =>
@@ -277,8 +258,6 @@ function computeSuitability() {
           totalScores  [r.Strategy] = (totalScores  [r.Strategy] || 0) + sc;
         });
     });
-
-    // 2) Original v1 console.log audit trail
     console.group(`🗺 ${name}`);
     metrics.forEach(m => {
       const val     = +p[m.key] || 0;
@@ -305,8 +284,6 @@ function computeSuitability() {
       .map(([s]) => s);
     console.log(`🏆 Best: ${bestStrats.join(', ')} (Score: ${maxScore})`);
     console.groupEnd();
-
-    // 3) Return the result object
     return {
       name,
       score:    maxScore,
@@ -315,13 +292,10 @@ function computeSuitability() {
     };
   });
 }
-
-
   function renderTable(){
     const tbody=document.querySelector('#resultsTable tbody'); tbody.innerHTML='';
     results.forEach(r=>{
       const tr=document.createElement('tr');
-      // strategy scores
       const innerRows=Object.entries(r.scores).map(([s,v])=>`<tr><td>${s}</td><td>${v}</td></tr>`).join('');
       tr.innerHTML=`
         <td>${r.name}</td>
@@ -334,7 +308,6 @@ function computeSuitability() {
         <td><div class="driver-checkboxes" data-district="${r.name}"></div></td>
       `;
       tbody.appendChild(tr);
-      // group drivers
       const groups={};
       driversList.forEach(d=>{
         const [grp, ...rest] = d.split(' - ');
